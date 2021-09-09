@@ -5,6 +5,7 @@
   "repository": "https://github.com/webb-tools/darkwebb-solidity.git",
   "author": "Webb Technologies",
   "license": "GPL-3.0-or-later",
+  "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
     "build": "yarn compile && yarn build:circuits && yarn build:hashers && yarn build:ptau",

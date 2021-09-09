@@ -19,8 +19,8 @@ async function run() {
   // const withdraw = await withdrawAnchor("0x5aCF1A99945AeC335309Ff0662504c8ebbf5c000", "0xD6F1E78B5F1Ebf8fF5a60C9d52eabFa73E5c5220", note, "0x48D41E139D3133F1879Ce5080b9C2CB4878332c2", wallet);
   // console.log(withdraw);
 
-  // const deposit = await depositAnchor("0x5aCF1A99945AeC335309Ff0662504c8ebbf5c000", "0xD6F1E78B5F1Ebf8fF5a60C9d52eabFa73E5c5220", wallet);
-  // console.log(deposit);
+  const deposit = await depositAnchor("0x5aCF1A99945AeC335309Ff0662504c8ebbf5c000", "0xD6F1E78B5F1Ebf8fF5a60C9d52eabFa73E5c5220", wallet);
+  console.log(deposit);
 }
 
 run();
