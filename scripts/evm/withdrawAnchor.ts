@@ -30,11 +30,15 @@ export async function withdrawAnchor(anchorAddress: string, tokenAddress: string
   const treeHeight = await anchor.levels();
   const leaves = await getAnchorLeaves(anchor.address, passedWallet.provider!);
 
+  console.log(leaves);
+
   const deposit = parseNote(note);
   const tree = new MerkleTree(treeHeight, leaves, null);
   
   if (deposit) {
     let leafIndex = leaves.findIndex(commitment => commitment === helpers.toFixedHex(deposit.commitment));
+    console.log(leafIndex);
+    
     const merkleInputs = await tree.path(leafIndex);
 
     const input = {

@@ -42,6 +42,7 @@
     "@truffle/contract": "^4.3.24",
     "@typechain/ethers-v5": "^7.0.1",
     "@typechain/hardhat": "^2.3.0",
+    "@webb-tools/sdk-mixer": "^0.1.2-79",
     "big-integer": "^1.6.48",
     "bn-chai": "^1.0.1",
     "chai-as-promised": "^7.1.1",
