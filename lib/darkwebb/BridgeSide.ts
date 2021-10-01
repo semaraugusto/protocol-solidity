@@ -4,19 +4,25 @@ import Anchor from './Anchor';
 import { Bridge__factory } from '../../typechain/factories/Bridge__factory';
 import { AnchorHandler } from "../../typechain/AnchorHandler";
 
+type Proposal = {
+  data: string,
+  dataHash: string,
+  resourceId: string,
+  chainId: number,
+  leafIndex: number,
+}
+
 class BridgeSide {
   contract: Bridge;
   admin: ethers.Signer;
-  provider: ethers.providers.JsonRpcProvider;
   handler: AnchorHandler | null;
+  proposals: Proposal[];
 
   private constructor(
     contract: Bridge,
-    provider: ethers.providers.JsonRpcProvider,
     signer: ethers.Signer,
   ) {
     this.contract = contract;
-    this.provider = provider;
     this.admin = signer;
     this.handler = null;
   }
@@ -26,15 +32,14 @@ class BridgeSide {
     initialRelayerThreshold: ethers.BigNumberish,
     fee: ethers.BigNumberish,
     expiry: ethers.BigNumberish,
-    provider: ethers.providers.JsonRpcProvider,
-    signer: ethers.Signer
+    admin: ethers.Signer
   ): Promise<BridgeSide> {
-    const bridgeFactory = new Bridge__factory(signer);
-    const chainId = await signer.getChainId();
+    const bridgeFactory = new Bridge__factory(admin);
+    const chainId = await admin.getChainId();
     const deployedBridge = await bridgeFactory.deploy(chainId, initialRelayers, initialRelayerThreshold, fee, expiry);
     await deployedBridge.deployed();
     console.log(`Deployed Bridge: ${deployedBridge.address}`);
-    const bridgeSide = new BridgeSide(deployedBridge, provider, signer);
+    const bridgeSide = new BridgeSide(deployedBridge, admin);
     return bridgeSide;
   }
 
@@ -42,14 +47,13 @@ class BridgeSide {
   *** make its way to the neighbor root of the linked anchor on chain X.
   *** @param linkedAnchorInstance: the anchor instance on the opposite chain
   ***/
-  public async createUpdateProposalDatahash(linkedAnchorInstance: Anchor) {
+  public async createUpdateProposalData(linkedAnchorInstance: Anchor) {
     if (!this.handler) {
       throw new Error("Cannot create a proposal without a handler");
     }
 
     const proposalData = await linkedAnchorInstance.getProposalData();
-    const dataHash = ethers.utils.keccak256(this.handler.address + proposalData.substr(2));
-    return dataHash;
+    return proposalData;
     // this.contract.voteProposal((await linkedAnchorInstance.signer.getChainId()), nonce, resourceId, dataHash);
   }
 
@@ -68,18 +72,39 @@ class BridgeSide {
       throw new Error("Cannot connect an anchor without a handler");
     }
 
-    const resourceId = await anchor.createResourceId();
+    const resourceId = await anchor.createResourceID();
     await this.contract.adminSetResource(this.handler.address, resourceId, anchor.contract.address);
-    // await this.handler.setResource(resourceId, anchor.contract.address);
+    // await this.handler.setResource(resourceId, anchor.contract.address); covered in above call
     await anchor.setHandler(this.handler.address);
+    await anchor.setBridge(this.contract.address);
 
     return resourceId;
   }
 
-  public async voteProposal(linkedAnchor: Anchor) {
-    const dataHash = this.createUpdateProposalDatahash(linkedAnchor);
-    // The nonce is the leafIndex 
-    const latestNonce = linkedAnchor.numberOfLeaves - 1;
+  // the 'linkedAnchor' is the anchor which exists on a chain other than this bridge's
+  // the 'thisAnchor' is the anchor on the same chain as this bridge.
+  // nonce is leafIndex from linkedAnchor
+  // chainId from linked anchor
+  // resourceId for this anchor
+  // dataHash is combo of keccak('anchor handler for this bridge' + (chainID linkedAnchor + blockHeight linkedAnchor + root linkedAnchor))
+  public async voteProposal(linkedAnchor: Anchor, thisAnchor: Anchor) {
+    if (!this.handler) {
+      throw new Error("Cannot connect an anchor without a handler");
+    }
+
+    const proposalData = await this.createUpdateProposalData(linkedAnchor);
+    const dataHash = ethers.utils.keccak256(this.handler.address + proposalData.substr(2));
+    const resourceId = await thisAnchor.createResourceID();
+    const chainId = await linkedAnchor.signer.getChainId();
+    const nonce = linkedAnchor.tree.number_of_elements() - 1;
+
+    const tx = await this.contract.voteProposal(chainId, nonce, resourceId, dataHash);
+    const receipt = await tx.wait();
+    
+    return receipt;
+  }
+
+  public async executeProposal(linkedAnchor: Anchor, thisAnchor: Anchor) {
 
   }
 }

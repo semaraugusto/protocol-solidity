@@ -14,6 +14,17 @@ class MintableToken {
     this.signer = signer;
   }
 
+  public static async createToken(
+    name: string,
+    symbol: string,
+    creator: ethers.Signer
+  ) {
+    const factory = new ERC20PresetMinterPauser__factory(creator);
+    const token = await factory.deploy(name, symbol);
+    await token.deployed();
+    return new MintableToken(token, creator);
+  }
+
   public static tokenFromAddress(
     contract: string,
     signer: ethers.Signer,

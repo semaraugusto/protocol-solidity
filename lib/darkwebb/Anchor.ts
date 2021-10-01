@@ -19,6 +19,11 @@ interface AnchorDepositInfo {
   nullifierHash: string,
 };
 
+type DepositHistory = {
+  root: string, // the new root after the insertion of the commitment
+  blockNumber: number, // the block number that the deposit occurred in
+}
+
 // This convenience wrapper class is used in tests -
 // It represents a deployed contract throughout its life (e.g. maintains merkle tree state)
 // Functionality relevant to anchors in general (proving, verifying) is implemented in static methods
@@ -31,6 +36,9 @@ class Anchor {
   linkedRoot: string;
   latestSyncedBlock: number;
 
+  // The depositHistory stores leafIndex => information to create proposals
+  depositHistory: Record<string, DepositHistory>;
+
   private constructor(
     contract: Anchor2,
     signer: ethers.Signer,
@@ -41,6 +49,7 @@ class Anchor {
     this.tree = new MerkleTree('', treeHeight);
     this.linkedRoot = "0x0";
     this.latestSyncedBlock = 0;
+    this.depositHistory = {};
   }
 
   // public static anchorFromAddress(
@@ -84,8 +93,8 @@ class Anchor {
     return createdAnchor;
   }
 
-  public static generateDeposit(destinationChainId: number, secretBytesLen: number = 31, nullifierBytesLen: number = 31): AnchorDepositInfo {
-    let chainID = BigInt(destinationChainId);
+  public static generateDeposit(destinationChainID: number, secretBytesLen: number = 31, nullifierBytesLen: number = 31): AnchorDepositInfo {
+    let chainID = BigInt(destinationChainID);
     let secret = rbigint(secretBytesLen);
     let nullifier = rbigint(nullifierBytesLen);
 
@@ -162,7 +171,7 @@ class Anchor {
   // }
 
   // 
-  public async createResourceId(): Promise<string> {
+  public async createResourceID(): Promise<string> {
     return toHex(this.contract.address + toHex((await this.signer.getChainId()).toString(), 4).substr(2), 32);
   }
 
@@ -178,14 +187,19 @@ class Anchor {
 
   // Proposal data is used to update linkedAnchors via bridge proposals 
   // on other chains with this anchor's state
-  public async getProposalData(): Promise<string> {
+  public async getProposalData(leafIndex?: number): Promise<string> {
 
-    const chainId = await this.signer.getChainId();
-    const blockHeight = await this.signer.provider!.getBlockNumber();
-    const merkleRoot = await this.tree.get_root();
+    // If no leaf index passed in, set it to the most recent one.
+    if (!leafIndex) {
+      leafIndex = this.tree.number_of_elements() - 1;
+    }
+
+    const chainID = await this.signer.getChainId();
+    const blockHeight = this.depositHistory[leafIndex].blockNumber;
+    const merkleRoot = this.depositHistory[leafIndex].root;
 
     return '0x' +
-      toHex(chainId.toString(), 32).substr(2) + 
+      toHex(chainID.toString(), 32).substr(2) + 
       toHex(blockHeight.toString(), 32).substr(2) + 
       toHex(merkleRoot, 32).substr(2);
   }
@@ -193,13 +207,21 @@ class Anchor {
   // Makes a deposit into the contract and return the parameters and index of deposit
   public async deposit(): Promise<{deposit: AnchorDepositInfo, index: number}> {
 
-    const chainId = await this.signer.getChainId();
-    const deposit = Anchor.generateDeposit(chainId);
+    const chainID = await this.signer.getChainId();
+    const deposit = Anchor.generateDeposit(chainID);
     
     const tx = await this.contract.deposit(toFixedHex(deposit.commitment), { gasLimit: '0x5B8D80' });
-    await tx.wait();
+    const receipt = await tx.wait();
 
-    const index: number = await this.tree.insert(deposit.commitment);
+    // decode the event
+    const filter = this.contract.filters.Deposit(toFixedHex(deposit.commitment));
+    const events = await this.contract.queryFilter(filter, receipt.blockNumber);
+
+    const root = await this.contract.getLastRoot();
+    const index = events[0].args.leafIndex;
+
+    this.depositHistory[index] = {blockNumber: receipt.blockNumber, root}
+    console.log(this.depositHistory);
 
     return { deposit, index };
   }
