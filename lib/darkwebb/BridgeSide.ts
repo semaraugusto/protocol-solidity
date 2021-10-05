@@ -57,9 +57,9 @@ class BridgeSide {
     // this.contract.voteProposal((await linkedAnchorInstance.signer.getChainId()), nonce, resourceId, dataHash);
   }
 
-  public setHandler(handler: AnchorHandler) {
-    this.handler = handler;
-  } 
+  public async createAnchorHandler(anchors: Anchor[]) {
+    
+  }
 
   public async setResource(resourceID: string, handlerAddress: string, anchorAddress) {
     

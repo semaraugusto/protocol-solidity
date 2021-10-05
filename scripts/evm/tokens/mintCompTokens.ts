@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 import { ethers } from 'ethers';
 import { IMintableCompToken__factory } from '../../../typechain/factories/IMintableCompToken__factory';
 
