@@ -19,11 +19,6 @@ interface AnchorDepositInfo {
   nullifierHash: string,
 };
 
-type DepositHistory = {
-  root: string, // the new root after the insertion of the commitment
-  blockNumber: number, // the block number that the deposit occurred in
-}
-
 // This convenience wrapper class is used in tests -
 // It represents a deployed contract throughout its life (e.g. maintains merkle tree state)
 // Functionality relevant to anchors in general (proving, verifying) is implemented in static methods
@@ -36,8 +31,8 @@ class Anchor {
   linkedRoot: string;
   latestSyncedBlock: number;
 
-  // The depositHistory stores leafIndex => information to create proposals
-  depositHistory: Record<string, DepositHistory>;
+  // The depositHistory stores leafIndex => information to create proposals (new root)
+  depositHistory: Record<number, string>;
 
   private constructor(
     contract: Anchor2,
@@ -195,12 +190,11 @@ class Anchor {
     }
 
     const chainID = await this.signer.getChainId();
-    const blockHeight = this.depositHistory[leafIndex].blockNumber;
-    const merkleRoot = this.depositHistory[leafIndex].root;
+    const merkleRoot = this.depositHistory[leafIndex];
 
     return '0x' +
       toHex(chainID.toString(), 32).substr(2) + 
-      toHex(blockHeight.toString(), 32).substr(2) + 
+      toHex(leafIndex.toString(), 32).substr(2) + 
       toHex(merkleRoot, 32).substr(2);
   }
 
@@ -220,7 +214,7 @@ class Anchor {
     const root = await this.contract.getLastRoot();
     const index = events[0].args.leafIndex;
 
-    this.depositHistory[index] = {blockNumber: receipt.blockNumber, root}
+    this.depositHistory[index] = root;
     console.log(this.depositHistory);
 
     return { deposit, index };
