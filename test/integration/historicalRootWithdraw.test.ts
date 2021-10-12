@@ -63,15 +63,13 @@ describe('E2E LinkableAnchors - Cross chain withdraw using historical root shoul
   });
 
   it('[sanity] dest chain bridge configured with threshold and relayers', async () => {
-    const config = bridge.exportConfig();
+    const destBridgeSide = await bridge.getBridgeSide(destChainID);
 
-    const destBridgeContract = config
-
-    assert.equal(await destBridgeSide.)
+    assert.equal(await destBridgeSide.contract.isRelayer(ganacheWallet.address));
     
-    assert.equal(await DestBridgeInstance._chainID(), destChainID)
-    assert.equal(await DestBridgeInstance._relayerThreshold(), relayerThreshold)
-    assert.equal((await DestBridgeInstance._totalRelayers()).toString(), '1')
+    assert.equal(await destBridgeSide.contract._chainID(), destChainID)
+    assert.equal(await destBridgeSide.contract._relayerThreshold(), relayerThreshold)
+    assert.equal((await destBridgeSide.contract._totalRelayers()).toString(), '1')
   })
 
   it('withdrawing across bridge after two deposits should work', async () => {

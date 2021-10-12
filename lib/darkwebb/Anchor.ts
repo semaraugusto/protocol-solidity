@@ -28,7 +28,6 @@ class Anchor {
   contract: Anchor2;
   tree: MerkleTree;
   // hex string of the connected root
-  linkedRoot: string;
   latestSyncedBlock: number;
   circuitZkeyPath: string;
   circuitWASMPath: string;
@@ -46,7 +45,6 @@ class Anchor {
     this.signer = signer;
     this.contract = contract;
     this.tree = new MerkleTree('', treeHeight);
-    this.linkedRoot = "0x0";
     this.latestSyncedBlock = 0;
     this.circuitZkeyPath = circuitZkeyPath || 'test/fixtures/2/circuit_final.zkey';
     this.circuitWASMPath = circuitZkeyPath || 'test/fixtures/2/poseidon_bridge_2.wasm';

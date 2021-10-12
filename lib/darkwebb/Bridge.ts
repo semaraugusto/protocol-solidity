@@ -52,22 +52,28 @@ async function getVerifierFactory(wallet: ethers.Signer): Promise<ethers.Contrac
 // Deployer config matches the chainId to the signer for that chain
 export type DeployerConfig = Record<number, ethers.Signer>;
 
-export type BridgedAssetInput = {
+type NewAssetInput = {
   // The name of the asset that will be created for the bridge.
   // It will be ERC20 compliant - 18 decimals
   asset: {
     assetName: string,
     assetSymbol: string,
-  }
+  };
   // An array for anchors which should be created with given size for the asset
-  anchorSizes: ethers.BigNumberish[]
+  anchorSizes: ethers.BigNumberish[];
 };
+
+type ExistingAssetInput = {
+  // A record of chainId => address
+  asset: Record<number, string>;
+  anchorSizes: ethers.BigNumberish[];
+}
 
 // Users define an input for a completely new bridge
 export type BridgeInput = {
 
   // The tokens and anchors which should be supported after deploying from this bridge input
-  anchorInputs: BridgedAssetInput[],
+  anchorInputs: (NewAssetInput|ExistingAssetInput)[],
 
   // The IDs of the chains to deploy to
   chainIDs: number[],
@@ -241,6 +247,10 @@ class Bridge {
 
   public async getBridgeSide(chainID: number) {
     return this.bridgeSides[chainID];
+  }
+
+  public async getAnchor(chainID: number, tokenName: string, anchorSize: BigNumberish) {
+    
   }
 
   public exportConfig() {
