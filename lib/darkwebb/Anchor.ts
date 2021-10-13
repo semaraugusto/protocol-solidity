@@ -19,6 +19,11 @@ interface AnchorDepositInfo {
   nullifierHash: string,
 };
 
+export type AnchorDeposit = {
+  deposit: AnchorDepositInfo,
+  index: number
+};
+
 // This convenience wrapper class is used in tests -
 // It represents a deployed contract throughout its life (e.g. maintains merkle tree state)
 // Functionality relevant to anchors in general (proving, verifying) is implemented in static methods
@@ -171,7 +176,10 @@ class Anchor {
 
   // 
   public async createResourceID(): Promise<string> {
-    return toHex(this.contract.address + toHex((await this.signer.getChainId()).toString(), 4).substr(2), 32);
+    const chainId = await this.signer.getChainId();
+    
+    console.log(`chainID in createResourceID: `, chainId);
+    return ethers.utils.hexZeroPad(this.contract.address + toHex(chainId, 4).substr(2), 32);
   }
 
   public async setHandler(handlerAddress: string) {
@@ -182,6 +190,17 @@ class Anchor {
   public async setBridge(bridgeAddress: string) {
     const tx = await this.contract.setBridge(bridgeAddress);
     await tx.wait();
+  }
+
+  public async setSigner(newSigner: ethers.Signer) {
+    const currentChainId = await this.signer.getChainId();
+    const newChainId = await newSigner.getChainId();
+
+    if (currentChainId === newChainId) {
+      this.signer = newSigner;
+      return true;
+    }
+    return false;
   }
 
   // Proposal data is used to update linkedAnchors via bridge proposals 
@@ -203,7 +222,7 @@ class Anchor {
   }
 
   // Makes a deposit into the contract and return the parameters and index of deposit
-  public async deposit(destinationChainId?: number): Promise<{deposit: AnchorDepositInfo, index: number}> {
+  public async deposit(destinationChainId?: number): Promise<AnchorDeposit> {
     const chainId = (destinationChainId) ? destinationChainId : await this.signer.getChainId();
     const deposit = Anchor.generateDeposit(chainId);
     

@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { Bridge } from '../../typechain/Bridge';
 import Anchor from './Anchor';
 import { Bridge__factory } from '../../typechain/factories/Bridge__factory';
-import { AnchorHandler } from "../../typechain/AnchorHandler";
+import AnchorHandler from "./AnchorHandler";
 
 type Proposal = {
   data: string,
@@ -25,6 +25,7 @@ class BridgeSide {
     this.contract = contract;
     this.admin = signer;
     this.handler = null;
+    this.proposals = [];
   }
 
   public static async createBridgeSide(
@@ -57,12 +58,8 @@ class BridgeSide {
     // this.contract.voteProposal((await linkedAnchorInstance.signer.getChainId()), nonce, resourceId, dataHash);
   }
 
-  public async createAnchorHandler(anchors: Anchor[]) {
-    
-  }
-
-  public async setResource(resourceID: string, handlerAddress: string, anchorAddress) {
-    
+  public async setAnchorHandler(handler: AnchorHandler) {
+    this.handler = handler;
   }
 
   // Connects the bridgeSide, anchor handler, and anchor.
@@ -73,9 +70,9 @@ class BridgeSide {
     }
 
     const resourceId = await anchor.createResourceID();
-    await this.contract.adminSetResource(this.handler.address, resourceId, anchor.contract.address);
+    await this.contract.adminSetResource(this.handler.contract.address, resourceId, anchor.contract.address);
     // await this.handler.setResource(resourceId, anchor.contract.address); covered in above call
-    await anchor.setHandler(this.handler.address);
+    await anchor.setHandler(this.handler.contract.address);
     await anchor.setBridge(this.contract.address);
 
     return resourceId;
@@ -86,14 +83,14 @@ class BridgeSide {
   // nonce is leafIndex from linkedAnchor
   // chainId from linked anchor
   // resourceId for this anchor
-  // dataHash is combo of keccak('anchor handler for this bridge' + (chainID linkedAnchor + blockHeight linkedAnchor + root linkedAnchor))
+  // dataHash is combo of keccak('anchor handler for this bridge' + (chainID linkedAnchor + leafIndex linkedAnchor + root linkedAnchor))
   public async voteProposal(linkedAnchor: Anchor, thisAnchor: Anchor) {
     if (!this.handler) {
       throw new Error("Cannot connect an anchor without a handler");
     }
 
     const proposalData = await this.createUpdateProposalData(linkedAnchor);
-    const dataHash = ethers.utils.keccak256(this.handler.address + proposalData.substr(2));
+    const dataHash = ethers.utils.keccak256(this.handler.contract.address + proposalData.substr(2));
     const resourceId = await thisAnchor.createResourceID();
     const chainId = await linkedAnchor.signer.getChainId();
     const nonce = linkedAnchor.tree.number_of_elements() - 1;
@@ -104,8 +101,34 @@ class BridgeSide {
     return receipt;
   }
 
-  public async executeProposal(linkedAnchor: Anchor, thisAnchor: Anchor) {
 
+  // address handler = _resourceIDToHandlerAddress[resourceID];
+  // uint72 nonceAndID = (uint72(nonce) << 8) | uint72(chainID);
+  // bytes32 dataHash = keccak256(abi.encodePacked(handler, data));
+  // Proposal storage proposal = _proposals[nonceAndID][dataHash];
+
+  // require(proposal._status == ProposalStatus.Passed, "Proposal must have Passed status");
+
+  // proposal._status = ProposalStatus.Executed;
+
+  // IExecutor executionHandler = IExecutor(handler);
+  // executionHandler.executeProposal(resourceID, data);
+
+  // emit ProposalEvent(chainID, nonce, ProposalStatus.Executed, dataHash);
+  public async executeProposal(linkedAnchor: Anchor, thisAnchor: Anchor) {
+    if (!this.handler) {
+      throw new Error("Cannot connect an anchor without a handler");
+    }
+
+    const proposalData = await this.createUpdateProposalData(linkedAnchor);
+    const resourceId = await thisAnchor.createResourceID();
+    const chainId = await linkedAnchor.signer.getChainId();
+    const nonce = linkedAnchor.tree.number_of_elements() - 1;
+
+    const tx = await this.contract.executeProposal(chainId, nonce, proposalData, resourceId);
+    const receipt = await tx.wait();
+    
+    return receipt;
   }
 }
 

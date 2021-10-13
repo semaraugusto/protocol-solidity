@@ -5,13 +5,19 @@ import { ERC20PresetMinterPauser } from '../../typechain/Erc20PresetMinterPauser
 class MintableToken {
   contract: ERC20PresetMinterPauser;
   signer: ethers.Signer;
+  name: string;
+  symbol: string;
 
   constructor(
     contract: ERC20PresetMinterPauser,
+    name: string,
+    symbol: string,
     signer: ethers.Signer,
   ) {
     this.contract = contract;
     this.signer = signer;
+    this.name = name;
+    this.symbol = symbol;
   }
 
   public static async createToken(
@@ -22,15 +28,17 @@ class MintableToken {
     const factory = new ERC20PresetMinterPauser__factory(creator);
     const token = await factory.deploy(name, symbol);
     await token.deployed();
-    return new MintableToken(token, creator);
+    return new MintableToken(token, name, symbol, creator);
   }
 
-  public static tokenFromAddress(
+  public static async tokenFromAddress(
     contract: string,
     signer: ethers.Signer,
-  ): MintableToken {
+  ): Promise<MintableToken> {
     const token = ERC20PresetMinterPauser__factory.connect(contract, signer);
-    return new MintableToken(token, signer);
+    const name = await token.name();
+    const symbol = await token.symbol();
+    return new MintableToken(token, name, symbol, signer);
   }
 
   public getAllowance(owner: string, spender: string): Promise<BigNumber> {
@@ -52,7 +60,8 @@ class MintableToken {
   }
 
   public grantMinterRole(address: string) {
-    return this.contract.grantRole('MINTER', address);
+    const MINTER_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('MINTER_ROLE'));
+    return this.contract.grantRole(MINTER_ROLE, address);
   }
 
 }

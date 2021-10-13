@@ -9,7 +9,7 @@ const {
 
 export const rbigint = (nbytes: number) => leBuff2int(crypto.randomBytes(nbytes));
 
-export const toHex = (covertThis: ethers.utils.BytesLike, padding: number): string => {
+export const toHex = (covertThis: ethers.utils.BytesLike | number | bigint, padding: number): string => {
   return ethers.utils.hexZeroPad(ethers.utils.hexlify(covertThis), padding);
 };
 

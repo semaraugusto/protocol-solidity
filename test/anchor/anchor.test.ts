@@ -104,7 +104,7 @@ describe('Anchor2', () => {
   })
 
   describe('#deposit', () => {
-    it.only('should emit event', async () => {
+    it('should emit event', async () => {
       let { deposit } = await anchor.deposit();
 
       const filter = anchor.contract.filters.Deposit(helpers.toFixedHex(deposit.commitment), null, null);
