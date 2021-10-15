@@ -344,7 +344,7 @@ describe('2 sided bridge existing token use', () => {
   })
 
   describe('#bridging', () => {
-    it('should withdraw successfully from latest deposit', async () => {
+    it.only('should withdraw successfully from latest deposit', async () => {
       // Fetch information about the anchor to be updated.
       const signers = await ethers.getSigners();
       const anchorSize = '1000000000000000000';
@@ -381,7 +381,7 @@ describe('2 sided bridge existing token use', () => {
       const controlledAnchor2: Anchor = bridge.getAnchor(chainId1, webbTokenName, anchorSize)!;
       let edgeIndex = await controlledAnchor2.contract.edgeIndex(destChainID2);
       const destAnchorEdge2Before = await controlledAnchor2.contract.edgeList(edgeIndex);
-      const webbToken = await MintableToken.tokenFromAddress(webbTokenSrc, ganacheWallet2);
+      const webbToken = await MintableToken.tokenFromAddress(webbTokenSrc, signers[1]);
       const startingBalanceDest = await webbToken.getBalance(signers[1].address);
 
       // Make a deposit
