@@ -55,8 +55,10 @@ class MintableToken {
     });
   }
 
-  public mintTokens(address: string, amount: BigNumberish) {
-    return this.contract.mint(address, amount);
+  public async mintTokens(address: string, amount: BigNumberish) {
+    const tx = await this.contract.mint(address, amount);
+    await tx.wait();
+    return;
   }
 
   public grantMinterRole(address: string) {

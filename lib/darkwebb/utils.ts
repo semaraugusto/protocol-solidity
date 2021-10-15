@@ -27,3 +27,29 @@ export function p256(n: bigint) {
 
   return nstr;
 }
+
+const HasherContract = require('../../artifacts/contracts/trees/Hashers.sol/PoseidonT3.json');
+const VerifierContract = require('../../artifacts/contracts/verifiers/Verifier2.sol/Verifier2.json');
+
+// Hasher and Verifier ABIs for deployment
+export async function getHasherFactory(wallet: ethers.Signer): Promise<ethers.ContractFactory> {
+  const hasherContractRaw = {
+    contractName: 'PoseidonT3',
+    abi: HasherContract.abi,
+    bytecode: HasherContract.bytecode,
+  };
+
+  const hasherFactory = new ethers.ContractFactory(hasherContractRaw.abi, hasherContractRaw.bytecode, wallet);
+  return hasherFactory;
+};
+
+export async function getVerifierFactory(wallet: ethers.Signer): Promise<ethers.ContractFactory> {
+  const VerifierContractRaw = {
+    contractName: 'Verifier',
+    abi: VerifierContract.abi,
+    bytecode: VerifierContract.bytecode,
+  };
+
+  const verifierFactory = new ethers.ContractFactory(VerifierContractRaw.abi, VerifierContractRaw.bytecode, wallet);
+  return verifierFactory;
+};

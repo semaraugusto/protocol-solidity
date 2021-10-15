@@ -49,13 +49,8 @@ class BridgeSide {
   *** @param linkedAnchorInstance: the anchor instance on the opposite chain
   ***/
   public async createUpdateProposalData(linkedAnchorInstance: Anchor) {
-    if (!this.handler) {
-      throw new Error("Cannot create a proposal without a handler");
-    }
-
     const proposalData = await linkedAnchorInstance.getProposalData();
     return proposalData;
-    // this.contract.voteProposal((await linkedAnchorInstance.signer.getChainId()), nonce, resourceId, dataHash);
   }
 
   public async setAnchorHandler(handler: AnchorHandler) {
@@ -100,19 +95,6 @@ class BridgeSide {
     
     return receipt;
   }
-
-
-  // address handler = _resourceIDToHandlerAddress[resourceID];
-  // uint72 nonceAndID = (uint72(nonce) << 8) | uint72(chainID);
-  // bytes32 dataHash = keccak256(abi.encodePacked(handler, data));
-  // Proposal storage proposal = _proposals[nonceAndID][dataHash];
-
-  // require(proposal._status == ProposalStatus.Passed, "Proposal must have Passed status");
-
-  // proposal._status = ProposalStatus.Executed;
-
-  // IExecutor executionHandler = IExecutor(handler);
-  // executionHandler.executeProposal(resourceID, data);
 
   // emit ProposalEvent(chainID, nonce, ProposalStatus.Executed, dataHash);
   public async executeProposal(linkedAnchor: Anchor, thisAnchor: Anchor) {

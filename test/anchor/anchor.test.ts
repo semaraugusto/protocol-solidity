@@ -21,6 +21,7 @@ import {
 
 // Convenience wrapper classes for contract classes
 import Anchor from '../../lib/darkwebb/Anchor';
+import { getHasherFactory } from '../../lib/darkwebb/utils';
 
 const { NATIVE_AMOUNT } = process.env
 const snarkjs = require('snarkjs')
@@ -56,7 +57,9 @@ describe('Anchor2', () => {
     tree = new MerkleTree(levels, null, null);
 
     // create poseidon hasher
-    hasherInstance = await Poseidon.new();
+    const hasherFactory = await getHasherFactory(wallet);
+    hasherInstance = await hasherFactory.deploy();
+    await hasherInstance.deployed();
 
     // create poseidon verifier
     const verifierFactory = new Verifier2Factory(wallet);
@@ -206,7 +209,7 @@ describe('Anchor2', () => {
   })
 
   describe('#withdraw', () => {
-    it('should work', async () => {
+    it.only('should work', async () => {
 
       const signers = await ethers.getSigners();
       const sender = signers[0];
@@ -214,6 +217,7 @@ describe('Anchor2', () => {
 
       const balanceUserBefore = await token.balanceOf(sender.address);
       const { deposit, index } = await anchor.deposit();
+      console.log('deposit: ', deposit);
 
       const balanceUserAfterDeposit = await token.balanceOf(sender.address)
       const balanceAnchorAfterDeposit = await token.balanceOf(anchor.contract.address);

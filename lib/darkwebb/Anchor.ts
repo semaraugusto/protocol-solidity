@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, ethers } from "ethers";
+import { BigNumberish, ethers } from "ethers";
 import { Anchor2__factory } from '../../typechain/factories/Anchor2__factory';
 import { Anchor2 } from '../../typechain/Anchor2';
 import { rbigint, p256 } from "./utils";
@@ -21,7 +21,8 @@ interface AnchorDepositInfo {
 
 export type AnchorDeposit = {
   deposit: AnchorDepositInfo,
-  index: number
+  index: number,
+  originChainId: number;
 };
 
 // This convenience wrapper class is used in tests -
@@ -177,8 +178,6 @@ class Anchor {
   // 
   public async createResourceID(): Promise<string> {
     const chainId = await this.signer.getChainId();
-    
-    console.log(`chainID in createResourceID: `, chainId);
     return ethers.utils.hexZeroPad(this.contract.address + toHex(chainId, 4).substr(2), 32);
   }
 
@@ -198,6 +197,7 @@ class Anchor {
 
     if (currentChainId === newChainId) {
       this.signer = newSigner;
+      this.contract = this.contract.connect(newSigner);
       return true;
     }
     return false;
@@ -216,15 +216,16 @@ class Anchor {
     const merkleRoot = this.depositHistory[leafIndex];
 
     return '0x' +
-      toHex(chainID.toString(), 32).substr(2) + 
-      toHex(leafIndex.toString(), 32).substr(2) + 
+      toHex(chainID, 32).substr(2) + 
+      toHex(leafIndex, 32).substr(2) + 
       toHex(merkleRoot, 32).substr(2);
   }
 
   // Makes a deposit into the contract and return the parameters and index of deposit
   public async deposit(destinationChainId?: number): Promise<AnchorDeposit> {
-    const chainId = (destinationChainId) ? destinationChainId : await this.signer.getChainId();
-    const deposit = Anchor.generateDeposit(chainId);
+    const originChainId = await this.signer.getChainId();
+    const destChainId = (destinationChainId) ? destinationChainId : originChainId;
+    const deposit = Anchor.generateDeposit(destChainId);
     
     const tx = await this.contract.deposit(toFixedHex(deposit.commitment), { gasLimit: '0x5B8D80' });
     const receipt = await tx.wait();
@@ -234,12 +235,13 @@ class Anchor {
     const events = await this.contract.queryFilter(filter, receipt.blockNumber);
 
     const root = await this.contract.getLastRoot();
+    console.log('root: ', root)
     const index = events[0].args.leafIndex;
 
     this.depositHistory[index] = root;
-    console.log(this.depositHistory);
+    await this.tree.insert(deposit.commitment);
 
-    return { deposit, index };
+    return { deposit, index, originChainId };
   }
 
   // sync the local tree with the tree on chain.
@@ -256,6 +258,7 @@ class Anchor {
 
   public generateWitnessInput(
     deposit: AnchorDepositInfo,
+    originChain: number,
     refreshCommitment: BigInt,
     recipient: BigInt,
     relayer: BigInt,
@@ -266,6 +269,8 @@ class Anchor {
     pathIndices: any[],
   ): any {
     const { chainID, nullifierHash, nullifier, secret } = deposit;
+    let rootDiffIndex = (chainID != BigInt(originChain)) ? 1 : 0;
+    console.log(`root diff index: ${rootDiffIndex}`);
     return {
       // public
       nullifierHash, refreshCommitment, recipient, relayer, fee, refund, chainID, roots,
@@ -273,7 +278,7 @@ class Anchor {
       nullifier, secret, pathElements, pathIndices, diffs: roots.map(r => {
         return F.sub(
           Scalar.fromString(`${r}`),
-          Scalar.fromString(`${roots[0]}`),
+          Scalar.fromString(`${roots[rootDiffIndex]}`),
         ).toString();
       }),
     };
@@ -293,18 +298,23 @@ class Anchor {
       await this.update(this.latestSyncedBlock);
     }
 
-    const { root, pathElements, pathIndex } = await this.tree.path(index);
+    const { merkleRoot, pathElements, pathIndices } = await this.tree.path(index);
+    const chainId = await this.signer.getChainId();
+
+    console.log('pathIndices: ', pathIndices);
+    console.log('merkle root from withdraw: ', merkleRoot);
 
     const input = this.generateWitnessInput(
       deposit,
+      chainId,
       refreshCommitment,
       BigInt(recipient),
       BigInt(relayer),
       BigInt(fee),
       BigInt(0),
-      [root as string, '0'],
+      [merkleRoot as string, '0'],
       pathElements,
-      pathIndex,
+      pathIndices,
     );
 
     const createWitness = async (data: any) => {
@@ -319,6 +329,13 @@ class Anchor {
     let proof = res.proof;
     let publicSignals = res.publicSignals;
 
+    const vKey = await snarkjs.zKey.exportVerificationKey(this.circuitZkeyPath);
+    res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
+
+    console.log('public signals: ', publicSignals);
+
+    let proofEncoded = await Anchor.generateWithdrawProofCallData(proof, publicSignals);
+
     const args = [
       Anchor.createRootsBytes(input.roots),
       toFixedHex(input.nullifierHash),
@@ -327,12 +344,86 @@ class Anchor {
       toFixedHex(input.relayer, 20),
       toFixedHex(input.fee),
       toFixedHex(input.refund),
-    ]
+    ];
+
+    console.log('args from normal withdraw', args);
+
+    //@ts-ignore
+    let tx = await this.contract.withdraw(`0x${proofEncoded}`, ...args, { gasLimit: '0x5B8D80' });
+    const receipt = await tx.wait();
+
+    const filter = this.contract.filters.Withdrawal(null, null, null, null);
+    const events = await this.contract.queryFilter(filter, receipt.blockHash);
+    return events[0];
+  }
+
+  // A bridgedWithdraw needs the merkle proof to be generated from an anchor other than this one,
+  public async bridgedWithdraw(
+    deposit: AnchorDeposit,
+    merkleProof: any,
+    recipient: string,
+    relayer: string,
+    fee: string,
+    refund: string,
+    refreshCommitment?: string,
+  ) {
+    const { pathElements, pathIndices, merkleRoot } = merkleProof;
+    console.log('pathIndices: ', pathIndices);
+    console.log('merkle root: ', merkleRoot);
+    const isKnownNeighborRoot = await this.contract.isKnownNeighborRoot(deposit.originChainId, toFixedHex(merkleRoot));
+    if (!isKnownNeighborRoot) {
+      throw new Error("Neighbor root not found");
+    }
+    refreshCommitment = (refreshCommitment) ? refreshCommitment : '0';
+
+    const lastRoot = await this.tree.get_root();
+    console.log('lastRoot: ', lastRoot);
+
+    const input = this.generateWitnessInput(
+      deposit.deposit,
+      deposit.originChainId,
+      BigInt(refreshCommitment),
+      BigInt(recipient),
+      BigInt(relayer),
+      BigInt(fee),
+      BigInt(refund),
+      [lastRoot as string, merkleRoot as string],
+      pathElements,
+      pathIndices,
+    );
+
+    const createWitness = async (data: any) => {
+      const wtns = {type: "mem"};
+      await snarkjs.wtns.calculate(data, path.join('.', this.circuitWASMPath), wtns);
+      return wtns;
+    }
+
+    const wtns = await createWitness(input);
+
+    let res = await snarkjs.groth16.prove(this.circuitZkeyPath, wtns);
+    let proof = res.proof;
+    let publicSignals = res.publicSignals;
+
+    console.log('public signals: ', publicSignals);
 
     const vKey = await snarkjs.zKey.exportVerificationKey(this.circuitZkeyPath);
     res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
 
     let proofEncoded = await Anchor.generateWithdrawProofCallData(proof, publicSignals);
+
+    console.log('generated withdraw proof calldata');
+
+    const args = [
+      Anchor.createRootsBytes(input.roots),
+      toFixedHex(input.nullifierHash),
+      toFixedHex(input.refreshCommitment, 32),
+      toFixedHex(input.recipient, 20),
+      toFixedHex(input.relayer, 20),
+      toFixedHex(input.fee),
+      toFixedHex(input.refund),
+    ];
+
+    console.log('args from bridgeWithdraw', args);
 
     //@ts-ignore
     let tx = await this.contract.withdraw(`0x${proofEncoded}`, ...args, { gasLimit: '0x5B8D80' });

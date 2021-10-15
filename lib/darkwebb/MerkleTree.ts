@@ -182,9 +182,9 @@ export class MerkleTree {
 
     this.traverse(index, traverser);
     return {
-      root,
+      merkleRoot: root,
       pathElements: traverser.pathElements,
-      pathIndex: traverser.pathIndex,
+      pathIndices: traverser.pathIndex,
       element,
     };
   }
