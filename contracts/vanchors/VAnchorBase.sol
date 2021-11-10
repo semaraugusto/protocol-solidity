@@ -23,7 +23,7 @@ import "../trees/VMerkleTreeWithHistory.sol";
 /** @dev This contract(pool) allows deposit of an arbitrary amount to it, shielded transfer to another registered user inside the pool
  * and withdrawal from the pool. Project utilizes UTXO model to handle users' funds.
  */
-contract VAnchorBase is VMerkleTreeWithHistory, IERC20Receiver, ReentrancyGuard {
+contract VAnchorBase is VMerkleTreeWithHistory, ReentrancyGuard {
   PermissionedAccounts public permissions;
   uint8 public immutable maxEdges;
 
