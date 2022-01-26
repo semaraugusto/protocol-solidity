@@ -35,6 +35,7 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
     "edgeIndex(uint64)": FunctionFragment;
     "edgeList(uint256)": FunctionFragment;
     "filledSubtrees(uint256)": FunctionFragment;
+    "getChainIDType()": FunctionFragment;
     "getChainId()": FunctionFragment;
     "getDenomination()": FunctionFragment;
     "getLastRoot()": FunctionFragment;
@@ -121,6 +122,10 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "filledSubtrees",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getChainIDType",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getChainId",
@@ -303,6 +308,10 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "edgeList", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "filledSubtrees",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getChainIDType",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getChainId", data: BytesLike): Result;
@@ -549,6 +558,8 @@ export class FixedDepositAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    getChainIDType(overrides?: CallOverrides): Promise<[number]>;
+
     getChainId(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     getDenomination(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -792,6 +803,8 @@ export class FixedDepositAnchor extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
+  getChainIDType(overrides?: CallOverrides): Promise<number>;
+
   getChainId(overrides?: CallOverrides): Promise<BigNumber>;
 
   getDenomination(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1009,6 +1022,8 @@ export class FixedDepositAnchor extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    getChainIDType(overrides?: CallOverrides): Promise<number>;
 
     getChainId(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1355,6 +1370,8 @@ export class FixedDepositAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getChainIDType(overrides?: CallOverrides): Promise<BigNumber>;
+
     getChainId(overrides?: CallOverrides): Promise<BigNumber>;
 
     getDenomination(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1574,6 +1591,8 @@ export class FixedDepositAnchor extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    getChainIDType(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getChainId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

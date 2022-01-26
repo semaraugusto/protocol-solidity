@@ -262,6 +262,23 @@ function filledSubtrees(uint256) external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### getChainIDType
+
+```solidity
+function getChainIDType() external view returns (uint48)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint48 | undefined
+
 ### getChainId
 
 ```solidity

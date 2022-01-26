@@ -10,6 +10,23 @@
 
 ## Methods
 
+### EVM_CHAIN_ID_TYPE
+
+```solidity
+function EVM_CHAIN_ID_TYPE() external view returns (bytes2)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes2 | undefined
+
 ### FIELD_SIZE
 
 ```solidity
@@ -285,6 +302,23 @@ function filledSubtrees(uint256) external view returns (bytes32)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined
+
+### getChainIDType
+
+```solidity
+function getChainIDType() external view returns (uint48)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint48 | undefined
 
 ### getChainId
 

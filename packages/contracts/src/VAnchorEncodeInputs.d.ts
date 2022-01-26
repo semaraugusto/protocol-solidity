@@ -161,7 +161,7 @@ export class VAnchorEncodeInputs extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string, string[]]>;
 
-    getChainIDType(overrides?: CallOverrides): Promise<[BigNumber]>;
+    getChainIDType(overrides?: CallOverrides): Promise<[number]>;
 
     getChainId(overrides?: CallOverrides): Promise<[BigNumber]>;
   };
@@ -194,7 +194,7 @@ export class VAnchorEncodeInputs extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[string, string[]]>;
 
-  getChainIDType(overrides?: CallOverrides): Promise<BigNumber>;
+  getChainIDType(overrides?: CallOverrides): Promise<number>;
 
   getChainId(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -227,7 +227,7 @@ export class VAnchorEncodeInputs extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string, string[]]>;
 
-    getChainIDType(overrides?: CallOverrides): Promise<BigNumber>;
+    getChainIDType(overrides?: CallOverrides): Promise<number>;
 
     getChainId(overrides?: CallOverrides): Promise<BigNumber>;
   };

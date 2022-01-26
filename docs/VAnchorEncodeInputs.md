@@ -78,7 +78,7 @@ function _encodeInputs2(VAnchorEncodeInputs.Proof _args, uint8 maxEdges) externa
 ### getChainIDType
 
 ```solidity
-function getChainIDType() external view returns (uint256)
+function getChainIDType() external view returns (uint48)
 ```
 
 
@@ -90,7 +90,7 @@ function getChainIDType() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint48 | undefined
 
 ### getChainId
 
