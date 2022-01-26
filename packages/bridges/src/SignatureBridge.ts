@@ -104,10 +104,7 @@ export class SignatureBridge {
     // and anchors in the subArrays of thhe same index should be linked together
     let createdAnchors: IAnchor[][] = [];
 
-    
-
     for (let chainID of bridgeInput.chainIDs) {
-      console.log(chainID);
       const adminAddress = await deployers[chainID].getAddress();
 
       // Create the bridgeSide
@@ -321,6 +318,7 @@ export class SignatureBridge {
     if (!(await anchor.setSigner(signer))) {
       throw new Error("Invalid signer for deposit, check the signer's chainID");
     }
+
     const deposit = await anchor.deposit(destinationChainId);
     await this.updateLinkedAnchors(anchor);
     return deposit;

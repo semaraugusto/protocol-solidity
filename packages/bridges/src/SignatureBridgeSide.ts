@@ -160,7 +160,11 @@ export class SignatureBridgeSide implements IBridgeSide {
     const proposalData = await this.createAnchorUpdateProposalData(srcAnchor, executionResourceID);
     const proposalMsg = ethers.utils.arrayify(ethers.utils.keccak256(proposalData).toString());
     const sig = await this.signingSystemSignFn(proposalMsg);
-    const tx = await this.contract.executeProposalWithSignature(proposalData, sig);
+    console.log(proposalData, sig);
+    const tx = await this.contract.executeProposalWithSignature(proposalData, sig, {
+      gasLimit: 8000000,
+      gasPrice: ethers.utils.parseUnits("10", "gwei"),
+    });
     const receipt = await tx.wait();
     
     return receipt;

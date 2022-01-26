@@ -86,7 +86,6 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
     });
 
     it.only('create 2 side bridge for one token', async () => {
-
       bridge2WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -104,20 +103,21 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         [chainID1]: signers[1],
         [chainID2]: ganacheWallet2,
       };
-      const bridge = await SignatureBridge.deployFixedDepositBridge(bridge2WebbEthInput, deploymentConfig, zkComponents2);
 
+      const bridge = await SignatureBridge.deployFixedDepositBridge(bridge2WebbEthInput, deploymentConfig, zkComponents2);
+      console.log('here1');
       // Should be able to retrieve individual anchors
       const chainId1 = chainID1;
       const chainId2 = chainID2;
       const anchorSize = '1000000000000000000';
       const anchor1: Anchor = bridge.getAnchor(chainId1, anchorSize)! as Anchor;
       const anchor2: Anchor = bridge.getAnchor(chainId2, anchorSize)! as Anchor;
-
+      console.log('here2');
       // Should be able to retrieve the token address (so we can mint tokens for test scenario)
       const webbTokenAddress = bridge.getWebbTokenAddress(chainId1);
       const webbToken = await MintableToken.tokenFromAddress(webbTokenAddress!, signers[1]);
       const tx = await webbToken.mintTokens(signers[2].address, '100000000000000000000000');
-
+      console.log('here3');
       // get the state of anchors before deposit
       const sourceAnchorRootBefore = await anchor1.contract.getLastRoot();
 
@@ -129,13 +129,13 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
 
       const sourceAnchorRootAfter = await anchor1.contract.getLastRoot();
       const destAnchorEdgeAfter = await anchor2.contract.edgeList(edgeIndex);
-
+      console.log('here4');
       // make sure the roots / anchors state have changed
       assert.notEqual(sourceAnchorRootAfter, sourceAnchorRootBefore);
       assert.deepEqual(ethers.BigNumber.from(0), destAnchorEdgeAfter.latestLeafIndex);
 
       await bridge.withdraw(depositNote, anchorSize, signers[1].address, signers[1].address, ganacheWallet2);
-
+      console.log('here5');
       const webbTokenAddress2 = bridge.getWebbTokenAddress(chainId2);
       const webbToken2 = await MintableToken.tokenFromAddress(webbTokenAddress2!, ganacheWallet2);
       const webbTokenBalance2 = await webbToken2.getBalance(signers[1].address);
@@ -143,7 +143,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       assert.deepEqual(webbTokenBalance2, ethers.BigNumber.from(anchorSize));
     });
 
-    it.only('create 3 side bridge for one token', async () => {
+    it('create 3 side bridge for one token', async () => {
       bridge3WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -200,7 +200,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       assert.deepStrictEqual(destAnchorEdge2After.root, destAnchorEdge3After.root);
     }).timeout(40000);
 
-    it.only('create 2 side bridge for multiple tokens', async () => {
+    it('create 2 side bridge for multiple tokens', async () => {
       bridge2WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -213,7 +213,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       };
     });
 
-    it.only('create 2 side bridge for native and erc20 token', async () => {
+    it('create 2 side bridge for native and erc20 token', async () => {
       bridge2WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -281,7 +281,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
     })
 
     describe('#bridging', () => {
-      it.only('should withdraw successfully from latest deposit', async () => {
+      it('should withdraw successfully from latest deposit', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -319,7 +319,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         assert.deepEqual(endingBalanceDest, startingBalanceDest.add(anchorSize));
       })
 
-      it.only('should withdraw on hardhat from ganache deposit', async () => {
+      it('should withdraw on hardhat from ganache deposit', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -345,7 +345,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         assert.deepStrictEqual(endingBalanceDest, startingBalanceDest.add(anchorSize));
       })
 
-      it.only('should update multiple deposits and withdraw historic deposit', async () => {
+      it('should update multiple deposits and withdraw historic deposit', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -372,7 +372,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         assert.deepStrictEqual(endingBalanceDest, startingBalanceDest.add(anchorSize));
       });
 
-      it.only('should update multiple deposits and withdraw historic deposit from ganache', async () => {
+      it('should update multiple deposits and withdraw historic deposit from ganache', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -479,7 +479,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       }
     })
 
-    it.only('should withdraw successfully from latest deposits on all chains', async () => {
+    it('should withdraw successfully from latest deposits on all chains', async () => {
       const signers = await ethers.getSigners();
 
       // make deposits so edges exists
