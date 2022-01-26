@@ -160,7 +160,7 @@ function configureLimits(uint256 _minimalWithdrawalAmount, uint256 _maximumDepos
 ### currentNeighborRootIndex
 
 ```solidity
-function currentNeighborRootIndex(uint256) external view returns (uint32)
+function currentNeighborRootIndex(uint64) external view returns (uint32)
 ```
 
 
@@ -171,7 +171,7 @@ function currentNeighborRootIndex(uint256) external view returns (uint32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint64 | undefined
 
 #### Returns
 
@@ -199,7 +199,7 @@ function currentRootIndex() external view returns (uint32)
 ### edgeExistsForChain
 
 ```solidity
-function edgeExistsForChain(uint256) external view returns (bool)
+function edgeExistsForChain(uint64) external view returns (bool)
 ```
 
 
@@ -210,7 +210,7 @@ function edgeExistsForChain(uint256) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint64 | undefined
 
 #### Returns
 
@@ -221,7 +221,7 @@ function edgeExistsForChain(uint256) external view returns (bool)
 ### edgeIndex
 
 ```solidity
-function edgeIndex(uint256) external view returns (uint256)
+function edgeIndex(uint64) external view returns (uint32)
 ```
 
 
@@ -232,18 +232,18 @@ function edgeIndex(uint256) external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint64 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint32 | undefined
 
 ### edgeList
 
 ```solidity
-function edgeList(uint256) external view returns (uint256 chainID, bytes32 root, uint256 latestLeafIndex)
+function edgeList(uint256) external view returns (uint64 chainID, bytes32 root, uint32 latestLeafIndex)
 ```
 
 
@@ -260,9 +260,9 @@ function edgeList(uint256) external view returns (uint256 chainID, bytes32 root,
 
 | Name | Type | Description |
 |---|---|---|
-| chainID | uint256 | undefined
+| chainID | uint64 | undefined
 | root | bytes32 | undefined
-| latestLeafIndex | uint256 | undefined
+| latestLeafIndex | uint32 | undefined
 
 ### filledSubtrees
 
@@ -374,7 +374,7 @@ function handler() external view returns (address)
 ### hasEdge
 
 ```solidity
-function hasEdge(uint256 _chainID) external view returns (bool)
+function hasEdge(uint64 _chainID) external view returns (bool)
 ```
 
 
@@ -385,7 +385,7 @@ function hasEdge(uint256 _chainID) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| _chainID | uint256 | undefined
+| _chainID | uint64 | undefined
 
 #### Returns
 
@@ -454,7 +454,7 @@ function initialize(uint256 _minimalWithdrawalAmount, uint256 _maximumDepositAmo
 ### isKnownNeighborRoot
 
 ```solidity
-function isKnownNeighborRoot(uint256 neighborChainID, bytes32 _root) external view returns (bool)
+function isKnownNeighborRoot(uint64 neighborChainID, bytes32 _root) external view returns (bool)
 ```
 
 
@@ -465,7 +465,7 @@ function isKnownNeighborRoot(uint256 neighborChainID, bytes32 _root) external vi
 
 | Name | Type | Description |
 |---|---|---|
-| neighborChainID | uint256 | undefined
+| neighborChainID | uint64 | undefined
 | _root | bytes32 | undefined
 
 #### Returns
@@ -650,7 +650,7 @@ function minimalWithdrawalAmount() external view returns (uint256)
 ### neighborRoots
 
 ```solidity
-function neighborRoots(uint256, uint32) external view returns (bytes32)
+function neighborRoots(uint64, uint32) external view returns (bytes32)
 ```
 
 
@@ -661,7 +661,7 @@ function neighborRoots(uint256, uint32) external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint64 | undefined
 | _1 | uint32 | undefined
 
 #### Returns
@@ -808,7 +808,7 @@ function unpackProof(uint256[8] _proof) external pure returns (uint256[2], uint2
 ### updateEdge
 
 ```solidity
-function updateEdge(uint256 sourceChainID, bytes32 root, uint256 leafIndex) external payable
+function updateEdge(uint64 sourceChainID, bytes32 root, uint32 leafIndex) external payable
 ```
 
 
@@ -819,9 +819,9 @@ function updateEdge(uint256 sourceChainID, bytes32 root, uint256 leafIndex) exte
 
 | Name | Type | Description |
 |---|---|---|
-| sourceChainID | uint256 | undefined
+| sourceChainID | uint64 | undefined
 | root | bytes32 | undefined
-| leafIndex | uint256 | undefined
+| leafIndex | uint32 | undefined
 
 ### verifier
 
@@ -869,7 +869,7 @@ function zeros(uint256 i) external pure returns (bytes32)
 ### EdgeAddition
 
 ```solidity
-event EdgeAddition(uint256 chainID, uint256 latestLeafIndex, bytes32 merkleRoot)
+event EdgeAddition(uint64 chainID, uint32 latestLeafIndex, bytes32 merkleRoot)
 ```
 
 
@@ -880,14 +880,14 @@ event EdgeAddition(uint256 chainID, uint256 latestLeafIndex, bytes32 merkleRoot)
 
 | Name | Type | Description |
 |---|---|---|
-| chainID  | uint256 | undefined |
-| latestLeafIndex  | uint256 | undefined |
+| chainID  | uint64 | undefined |
+| latestLeafIndex  | uint32 | undefined |
 | merkleRoot  | bytes32 | undefined |
 
 ### EdgeUpdate
 
 ```solidity
-event EdgeUpdate(uint256 chainID, uint256 latestLeafIndex, bytes32 merkleRoot)
+event EdgeUpdate(uint64 chainID, uint32 latestLeafIndex, bytes32 merkleRoot)
 ```
 
 
@@ -898,8 +898,8 @@ event EdgeUpdate(uint256 chainID, uint256 latestLeafIndex, bytes32 merkleRoot)
 
 | Name | Type | Description |
 |---|---|---|
-| chainID  | uint256 | undefined |
-| latestLeafIndex  | uint256 | undefined |
+| chainID  | uint64 | undefined |
+| latestLeafIndex  | uint32 | undefined |
 | merkleRoot  | bytes32 | undefined |
 
 ### Insertion

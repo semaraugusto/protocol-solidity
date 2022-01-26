@@ -19,6 +19,8 @@ import "hardhat/console.sol";
     @author ChainSafe Systems & Webb Technologies.
  */
 contract SignatureBridge is Pausable, SafeMath, Governable {
+    bytes2 public constant EVM_CHAIN_ID_TYPE = 0x0100;
+
     // destinationChainID => number of deposits
     mapping(uint256 => uint64) public _counts;
     // resourceID => handler address
@@ -87,10 +89,20 @@ contract SignatureBridge is Pausable, SafeMath, Governable {
         //Parse resourceID from the data
         bytes calldata resourceIDBytes = data[0:32];
         bytes32 resourceID = bytes32(resourceIDBytes);
+        // Parse chain type from the resource ID
+        bytes2 chainTypeID = bytes2(resourceIDBytes[26:28]);
+        // Verify current chain type is EVM
+        require(
+            uint16(EVM_CHAIN_ID_TYPE) == uint16(chainTypeID),
+            "executeProposalWithSignature: Not an EVM chain type"
+        );
         // Parse chain ID from the resource ID
         bytes4 executionChainID = bytes4(resourceIDBytes[28:32]);
         // Verify current chain matches chain ID from resource ID
-        require(uint32(getChainId()) == uint32(executionChainID), "executing on wrong chain");
+        require(
+            uint32(getChainId()) == uint32(executionChainID),
+            "executeProposalWithSignature: Not the correct chain"
+        );
         address handler = _resourceIDToHandlerAddress[resourceID];
         IExecutor executionHandler = IExecutor(handler);
         executionHandler.executeProposal(resourceID, data);

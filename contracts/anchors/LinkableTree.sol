@@ -16,24 +16,24 @@ abstract contract LinkableTree is MerkleTreePoseidon, ReentrancyGuard {
   uint8 public immutable maxEdges;
 
   struct Edge {
-    uint256 chainID;
+    uint64 chainID;
     bytes32 root;
-    uint256 latestLeafIndex;
+    uint32 latestLeafIndex;
   }
 
   // maps sourceChainID to the index in the edge list
-  mapping(uint256 => uint256) public edgeIndex;
-  mapping(uint256 => bool) public edgeExistsForChain;
+  mapping(uint64 => uint32) public edgeIndex;
+  mapping(uint64 => bool) public edgeExistsForChain;
   Edge[] public edgeList;
 
   // map to store chainID => (rootIndex => root) to track neighbor histories
-  mapping(uint256 => mapping(uint32 => bytes32)) public neighborRoots;
+  mapping(uint64 => mapping(uint32 => bytes32)) public neighborRoots;
   // map to store the current historical root index for a chainID
-  mapping(uint256 => uint32) public currentNeighborRootIndex;
+  mapping(uint64 => uint32) public currentNeighborRootIndex;
 
   // linking events
-  event EdgeAddition(uint256 chainID, uint256 latestLeafIndex, bytes32 merkleRoot);
-  event EdgeUpdate(uint256 chainID, uint256 latestLeafIndex, bytes32 merkleRoot);
+  event EdgeAddition(uint64 chainID, uint32 latestLeafIndex, bytes32 merkleRoot);
+  event EdgeUpdate(uint64 chainID, uint32 latestLeafIndex, bytes32 merkleRoot);
 
   /**
     @dev The constructor
@@ -52,9 +52,9 @@ abstract contract LinkableTree is MerkleTreePoseidon, ReentrancyGuard {
   }
 
   function updateEdge(
-    uint256 sourceChainID,
+    uint64 sourceChainID,
     bytes32 root,
-    uint256 leafIndex
+    uint32 leafIndex
   ) onlyHandler external payable nonReentrant {
     if (this.hasEdge(sourceChainID)) {
       //Update Edge
@@ -77,7 +77,7 @@ abstract contract LinkableTree is MerkleTreePoseidon, ReentrancyGuard {
       //Add Edge
       require(edgeList.length < maxEdges, "This Anchor is at capacity");
       edgeExistsForChain[sourceChainID] = true;
-      uint index = edgeList.length;
+      uint32 index = uint32(edgeList.length);
       Edge memory edge = Edge({
         chainID: sourceChainID,
         root: root,
@@ -121,7 +121,7 @@ abstract contract LinkableTree is MerkleTreePoseidon, ReentrancyGuard {
     }
   }
 
-  function isKnownNeighborRoot(uint256 neighborChainID, bytes32 _root) public view returns (bool) {
+  function isKnownNeighborRoot(uint64 neighborChainID, bytes32 _root) public view returns (bool) {
     if (_root == 0) {
       return false;
     }
@@ -160,7 +160,7 @@ abstract contract LinkableTree is MerkleTreePoseidon, ReentrancyGuard {
     return chainId;
   }
 
-  function hasEdge(uint256 _chainID) external view returns (bool) {
+  function hasEdge(uint64 _chainID) external view returns (bool) {
     return edgeExistsForChain[_chainID];
   }
 

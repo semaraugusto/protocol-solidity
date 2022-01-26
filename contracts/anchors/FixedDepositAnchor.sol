@@ -19,6 +19,8 @@ contract FixedDepositAnchor is AnchorBase, IFixedDepositAnchor {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
+  bytes2 public constant EVM_CHAIN_ID_TYPE = 0x0100;
+
   address public immutable token;
   uint256 public immutable denomination;
 
@@ -243,6 +245,15 @@ contract FixedDepositAnchor is AnchorBase, IFixedDepositAnchor {
     bytes calldata _roots,
     EncodeInputsData memory encodeInputsData
   ) internal view returns (bytes memory, bytes32[] memory) {
+    // The chain ID and type pair is 6 bytes in length
+    // The first 2 bytes are reserved for the chain type.
+    // The last 4 bytes are reserved for a u32 (uint32) chain ID.
+    bytes4 chainID = bytes4(uint32(getChainId()));
+    bytes2 chainType = EVM_CHAIN_ID_TYPE;
+    // We encode the chain ID and type pair into packed bytes which
+    // should be 6 bytes using the encode packed method. We will
+    // cast this as a bytes32 in order to encode as a uint256 for zkp verification.
+    bytes memory chainIdWithType = abi.encodePacked(chainType, chainID);
     bytes memory encodedInput = abi.encodePacked(
       uint256(encodeInputsData._nullifierHash),
       uint256(uint160(encodeInputsData._recipient)),
@@ -250,7 +261,7 @@ contract FixedDepositAnchor is AnchorBase, IFixedDepositAnchor {
       uint256(encodeInputsData._fee),
       uint256(encodeInputsData._refund),
       uint256(encodeInputsData._refreshCommitment),
-      uint256(getChainId()),
+      uint256(uint48(bytes6(chainIdWithType))),
       _roots
     );
 
