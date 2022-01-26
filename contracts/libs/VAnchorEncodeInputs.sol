@@ -21,7 +21,7 @@ library VAnchorEncodeInputs {
     return chainId;
   }
 
-  function getChainIDType() public view returns (uint) {
+  function getChainIDType() public view returns (uint48) {
     // The chain ID and type pair is 6 bytes in length
     // The first 2 bytes are reserved for the chain type.
     // The last 4 bytes are reserved for a u32 (uint32) chain ID.
@@ -31,14 +31,14 @@ library VAnchorEncodeInputs {
     // should be 6 bytes using the encode packed method. We will
     // cast this as a bytes32 in order to encode as a uint256 for zkp verification.
     bytes memory chainIdWithType = abi.encodePacked(chainType, chainID);
-    return uint(uint48(bytes6(chainIdWithType)));
+    return uint48(bytes6(chainIdWithType));
   }
 
   function _encodeInputs2(
     Proof memory _args,
     uint8 maxEdges
   ) public view returns (bytes memory, bytes32[] memory) {
-    uint256 _chainId = getChainId();
+    uint256 _chainId = getChainIDType();
     bytes32[] memory result = new bytes32[](maxEdges + 1);
     bytes memory encodedInput;
 
