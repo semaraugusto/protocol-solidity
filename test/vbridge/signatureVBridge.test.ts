@@ -7,11 +7,11 @@ const assert = require('assert');
 import { ethers } from 'hardhat';
 
 // Convenience wrapper classes for contract classes
-import { VBridge, VBridgeInput } from '../../packages/vbridge/src';
-import { VAnchor } from '../../packages/anchors/src';
-import { MintableToken, GovernedTokenWrapper } from '../../packages/tokens/src';
+import { VBridge, VBridgeInput } from 'packages/vbridge/src';
+import { VAnchor } from 'packages/anchors/src';
+import { MintableToken, GovernedTokenWrapper } from 'packages/tokens/src';
 import { BigNumber } from 'ethers';
-import { getChainIdType, Utxo } from '../../packages/utils/src';
+import { getChainIdType, Utxo } from 'packages/utils/src';
 import { startGanacheServer } from '../helpers/startGanacheServer';
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

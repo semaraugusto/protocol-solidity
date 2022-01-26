@@ -4,11 +4,12 @@
  */
 
 import { artifacts, contract, web3 } from "hardhat";
+import { getChainIdType } from "packages/utils/lib";
 const TruffleAssert = require('truffle-assertions');
 const BridgeContract = artifacts.require("SignatureBridge");
 
 contract('SignatureBridge - [constructor]', async accounts => {
-  const chainID = 1;
+  const chainID = getChainIdType(1);
   const initialRelayers = accounts.slice(0, 3);
   const initialRelayerThreshold = 2;
   let ADMIN_ROLE;

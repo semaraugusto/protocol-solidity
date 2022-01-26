@@ -22,10 +22,10 @@ import {
 } from '../../typechain';
 
 // Convenience wrapper classes for contract classes
-import { Verifier } from '../../packages/bridges/src';
-import { Anchor } from '../../packages/anchors/src';
-import { MerkleTree } from '../../packages/merkle-tree/src';
-import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from '../../packages/utils/src';
+import { Verifier } from 'packages/bridges/src';
+import { Anchor } from 'packages/anchors/src';
+import { MerkleTree } from 'packages/merkle-tree/src';
+import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from 'packages/utils/src';
 
 const { NATIVE_AMOUNT } = process.env
 const snarkjs = require('snarkjs')
