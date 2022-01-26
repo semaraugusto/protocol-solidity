@@ -435,7 +435,7 @@ describe('FixedDepositAnchor - [deposit & withdrawal functionality w/ 2 edges]',
       );
     });
 
-    it.only('should reject with tampered public inputs', async () => {
+    it('should reject with tampered public inputs', async () => {
       const signers = await ethers.getSigners();
       const relayer = signers[0];
       

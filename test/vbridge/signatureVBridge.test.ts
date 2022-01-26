@@ -80,7 +80,7 @@ describe('multichain tests for signature vbridge', () => {
         [chainID1]: signers[1],
         [chainID2]: ganacheWallet2,
       };
-      const vBridge = await VBridge.deployVariableAnchorBridge(bridge2WebbEthInput, deploymentConfig, false);
+      const vBridge = await VBridge.deployVariableAnchorBridge(bridge2WebbEthInput, deploymentConfig);
       // Should be able to retrieve individual anchors
       const chainId1 = chainID1;
       const chainId2 = chainID2;
@@ -165,7 +165,7 @@ describe('multichain tests for signature vbridge', () => {
       }
 
       // deploy the bridge
-      vBridge = await VBridge.deployVariableAnchorBridge(vBridgeInput, deploymentConfig, false);
+      vBridge = await VBridge.deployVariableAnchorBridge(vBridgeInput, deploymentConfig);
 
       // make one deposit so the  edge exists
       const depositUtxo1 = new Utxo({amount: BigNumber.from(1e7), originChainId: BigNumber.from(chainId1), chainId: BigNumber.from(chainId2)})
@@ -383,7 +383,7 @@ describe('multichain tests for signature vbridge', () => {
 
       // deploy the bridge
       
-      vBridge = await VBridge.deployVariableAnchorBridge(vBridgeInput, deploymentConfig, false);
+      vBridge = await VBridge.deployVariableAnchorBridge(vBridgeInput, deploymentConfig);
     
       // make one deposit so the  edge exists
       const depositUtxo1 = new Utxo({amount: BigNumber.from(1e7), originChainId: BigNumber.from(chainId1), chainId: BigNumber.from(chainId2)});
