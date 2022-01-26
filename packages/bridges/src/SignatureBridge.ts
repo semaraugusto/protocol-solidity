@@ -1,11 +1,12 @@
 import { ethers } from 'ethers';
-import { getChainIdType, ZkComponents } from "@webb-tools/utils";
+import { getChainIdType, toFixedHex, ZkComponents } from "@webb-tools/utils";
 import { PoseidonT3__factory } from "@webb-tools/contracts";
 import { MintableToken, GovernedTokenWrapper } from "@webb-tools/tokens";
 import { BridgeInput, DeployerConfig, IAnchor, IAnchorDeposit } from "@webb-tools/interfaces";
 import { Anchor, AnchorHandler } from '@webb-tools/anchors';
 import { SignatureBridgeSide } from './SignatureBridgeSide';
 import { Verifier } from "./Verifier";
+import { MerkleTree } from '@webb-tools/merkle-tree';
 
 type AnchorIdentifier = {
   anchorSize: ethers.BigNumberish;
@@ -164,7 +165,6 @@ export class SignatureBridge {
       
       let chainGroupedAnchors: IAnchor[] = [];
 
-      //
       // loop through all the anchor sizes on the token
       for (let anchorSize of bridgeInput.anchorInputs.anchorSizes) {
         const anchorInstance = await Anchor.createAnchor(
@@ -263,7 +263,10 @@ export class SignatureBridge {
 
   public getAnchor(chainId: number, anchorSize: ethers.BigNumberish) {
     let intendedAnchor: IAnchor | undefined = undefined;
-    intendedAnchor = this.anchors.get(SignatureBridge.createAnchorIdString({anchorSize, chainId}));
+    intendedAnchor = this.anchors.get(SignatureBridge.createAnchorIdString({
+      anchorSize,
+      chainId
+    }));
     return intendedAnchor;
   }
 
@@ -288,6 +291,7 @@ export class SignatureBridge {
     const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const anchor = this.getAnchor(chainId, anchorSize);
+    console.log('Anchor address:', anchor.getAddress());
     if (!anchor) {
       throw new Error("Anchor is not supported for the given token and size");
     }
@@ -317,7 +321,9 @@ export class SignatureBridge {
       throw new Error("Invalid signer for deposit, check the signer's chainID");
     }
 
+    console.log(toFixedHex((anchor.tree as MerkleTree).root()));
     const deposit = await anchor.deposit(destinationChainId);
+    console.log(toFixedHex((anchor.tree as MerkleTree).root()));
     await this.updateLinkedAnchors(anchor);
     return deposit;
   }

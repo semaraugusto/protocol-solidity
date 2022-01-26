@@ -37,6 +37,7 @@ export class SignatureBridgeSide implements IBridgeSide {
     const bridgeFactory = new SignatureBridge__factory(admin);
     const deployedBridge = await bridgeFactory.deploy(initialGovernor);
     await deployedBridge.deployed();
+    console.log('Deployed address', deployedBridge.address, await admin.getChainId());
     const bridgeSide = new SignatureBridgeSide(deployedBridge, admin);
     return bridgeSide;
   }
@@ -157,10 +158,10 @@ export class SignatureBridgeSide implements IBridgeSide {
     const proposalData = await this.createAnchorUpdateProposalData(srcAnchor, executionResourceID);
     const proposalMsg = ethers.utils.arrayify(ethers.utils.keccak256(proposalData).toString());
     const sig = await this.signingSystemSignFn(proposalMsg);
-    console.log(proposalData, sig);
+    console.log('Msg', proposalMsg);
+    console.log('Sig', sig);
     const tx = await this.contract.executeProposalWithSignature(proposalData, sig, {
-      gasLimit: 8000000,
-      gasPrice: ethers.utils.parseUnits("10", "gwei"),
+      gasLimit: 30000000,
     });
     const receipt = await tx.wait();
     

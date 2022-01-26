@@ -13,9 +13,10 @@ import { Anchor } from '../../packages/anchors/src';
 import { SignatureBridge } from '../../packages/bridges/src';
 import { BridgeInput } from '../../packages/interfaces/src';
 import { MintableToken } from '../../packages/tokens/src';
-import { fetchComponentsFromFilePaths, getChainIdType, ZkComponents } from '../../packages/utils/src';
+import { fetchComponentsFromFilePaths, getChainIdType, toFixedHex, ZkComponents } from '../../packages/utils/src';
 import { Signer, BigNumber } from 'ethers';
 import { startGanacheServer } from '../helpers/startGanacheServer';
+import { MerkleTree } from '../../packages/merkle-tree/lib';
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -105,22 +106,20 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       };
 
       const bridge = await SignatureBridge.deployFixedDepositBridge(bridge2WebbEthInput, deploymentConfig, zkComponents2);
-      console.log('here1');
       // Should be able to retrieve individual anchors
       const chainId1 = chainID1;
       const chainId2 = chainID2;
       const anchorSize = '1000000000000000000';
       const anchor1: Anchor = bridge.getAnchor(chainId1, anchorSize)! as Anchor;
+      console.log('Root 1 before locally', (anchor1.tree as MerkleTree).root())
       const anchor2: Anchor = bridge.getAnchor(chainId2, anchorSize)! as Anchor;
-      console.log('here2');
+      console.log('Root 2 before locally', (anchor2.tree as MerkleTree).root())
       // Should be able to retrieve the token address (so we can mint tokens for test scenario)
       const webbTokenAddress = bridge.getWebbTokenAddress(chainId1);
       const webbToken = await MintableToken.tokenFromAddress(webbTokenAddress!, signers[1]);
       const tx = await webbToken.mintTokens(signers[2].address, '100000000000000000000000');
-      console.log('here3');
       // get the state of anchors before deposit
-      const sourceAnchorRootBefore = await anchor1.contract.getLastRoot();
-
+      const sourceAnchorRootBefore = toFixedHex(await anchor1.contract.getLastRoot());
       // Deposit on the bridge
       const depositNote = await bridge.deposit(chainId2, anchorSize, signers[2]);
       
@@ -129,13 +128,11 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
 
       const sourceAnchorRootAfter = await anchor1.contract.getLastRoot();
       const destAnchorEdgeAfter = await anchor2.contract.edgeList(edgeIndex);
-      console.log('here4');
       // make sure the roots / anchors state have changed
       assert.notEqual(sourceAnchorRootAfter, sourceAnchorRootBefore);
       assert.deepEqual(ethers.BigNumber.from(0), destAnchorEdgeAfter.latestLeafIndex);
 
       await bridge.withdraw(depositNote, anchorSize, signers[1].address, signers[1].address, ganacheWallet2);
-      console.log('here5');
       const webbTokenAddress2 = bridge.getWebbTokenAddress(chainId2);
       const webbToken2 = await MintableToken.tokenFromAddress(webbTokenAddress2!, ganacheWallet2);
       const webbTokenBalance2 = await webbToken2.getBalance(signers[1].address);
@@ -164,8 +161,6 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         [chainID3]: ganacheWallet3,
       };
       const bridge = await SignatureBridge.deployFixedDepositBridge(bridge3WebbEthInput, deploymentConfig, zkComponents3);
-
-      
 
       // Should be able to retrieve individual anchors
       const chainId1 = chainID1;
@@ -200,31 +195,31 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       assert.deepStrictEqual(destAnchorEdge2After.root, destAnchorEdge3After.root);
     }).timeout(40000);
 
-    it('create 2 side bridge for multiple tokens', async () => {
-      bridge2WebbEthInput = {
-        anchorInputs: {
-          asset: {
-            [chainID1]: [tokenInstance1.contract.address],
-            [chainID2]: [tokenInstance2.contract.address],
-          },
-          anchorSizes: ['1000000000000000000', '100000000000000000000', '10000000000000000000000'],
-        },
-        chainIDs: [chainID1, chainID2]
-      };
-    });
+  //   it('create 2 side bridge for multiple tokens', async () => {
+  //     bridge2WebbEthInput = {
+  //       anchorInputs: {
+  //         asset: {
+  //           [chainID1]: [tokenInstance1.contract.address],
+  //           [chainID2]: [tokenInstance2.contract.address],
+  //         },
+  //         anchorSizes: ['1000000000000000000', '100000000000000000000', '10000000000000000000000'],
+  //       },
+  //       chainIDs: [chainID1, chainID2]
+  //     };
+  //   });
 
-    it('create 2 side bridge for native and erc20 token', async () => {
-      bridge2WebbEthInput = {
-        anchorInputs: {
-          asset: {
-            [chainID1]: [tokenInstance1.contract.address, '0'],
-            [chainID2]: [tokenInstance2.contract.address, '0x0000000000000000000000000000000000000000'],
-          },
-          anchorSizes: ['1000000000000000000', '100000000000000000000', '10000000000000000000000'],
-        },
-        chainIDs: [chainID1, chainID2]
-      };
-    });
+  //   it('create 2 side bridge for native and erc20 token', async () => {
+  //     bridge2WebbEthInput = {
+  //       anchorInputs: {
+  //         asset: {
+  //           [chainID1]: [tokenInstance1.contract.address, '0'],
+  //           [chainID2]: [tokenInstance2.contract.address, '0x0000000000000000000000000000000000000000'],
+  //         },
+  //         anchorSizes: ['1000000000000000000', '100000000000000000000', '10000000000000000000000'],
+  //       },
+  //       chainIDs: [chainID1, chainID2]
+  //     };
+  //   });
   }).timeout(50000);
 
   describe('2 sided bridge existing token use', () => {

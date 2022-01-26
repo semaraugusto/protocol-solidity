@@ -86,7 +86,7 @@ contract SignatureBridge is Pausable, SafeMath, Governable {
         bytes calldata data,
         bytes memory sig
     ) external signedByGovernor(keccak256(data), sig) {
-        //Parse resourceID from the data
+        // Parse resourceID from the data
         bytes calldata resourceIDBytes = data[0:32];
         bytes32 resourceID = bytes32(resourceIDBytes);
         // Parse chain type from the resource ID
