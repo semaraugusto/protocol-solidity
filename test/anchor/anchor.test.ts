@@ -33,7 +33,7 @@ const bigInt = require('big-integer');
 const F = require('circomlibjs').babyjub.F;
 const Scalar = require("ffjavascript").Scalar;
 
-describe('Anchor for 2 max edges', () => {
+describe('FixedDepositAnchor - [deposit & withdrawal functionality w/ 2 edges]', () => {
   let anchor: Anchor;
   let zkComponents: ZkComponents;
 

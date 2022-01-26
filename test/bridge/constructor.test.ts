@@ -5,9 +5,9 @@
 
 import { artifacts, contract, web3 } from "hardhat";
 const TruffleAssert = require('truffle-assertions');
-const BridgeContract = artifacts.require("Bridge");
+const BridgeContract = artifacts.require("SignatureBridge");
 
-contract('Bridge - [constructor]', async accounts => {
+contract('SignatureBridge - [constructor]', async accounts => {
   const chainID = 1;
   const initialRelayers = accounts.slice(0, 3);
   const initialRelayerThreshold = 2;
