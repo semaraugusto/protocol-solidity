@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later-only
  */
 
+import { getChainIdType } from "@webb-tools/utils";
 import { artifacts, assert, contract } from "hardhat";
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
@@ -26,8 +27,8 @@ contract('Bridge - [create a update proposal (voteProposal) with relayerThreshol
   const originChainRelayerAddress2 = accounts[4];
   const originChainRelayerBit = 1 << 0;
   const depositerAddress = accounts[2];
-  const originChainID = 1;
-  const destinationChainID = 2;
+  const originChainID = getChainIdType(1);
+  const destinationChainID = getChainIdType(2);
   const expectedUpdateNonce = 1;
   const relayerThreshold = 1;
   const expectedCreateEventStatus = 1;

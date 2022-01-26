@@ -7,16 +7,18 @@ const assert = require('assert');
 import { ethers } from 'hardhat';
 
 // Convenience wrapper classes for contract classes
-import { VBridge, VBridgeInput } from '@webb-tools/vbridge';
-import { VAnchor } from '@webb-tools/anchors';
-import { MintableToken, GovernedTokenWrapper } from '@webb-tools/tokens';
+import { VBridge, VBridgeInput } from '../../packages/vbridge/src';
+import { VAnchor } from '../../packages/anchors/src';
+import { MintableToken, GovernedTokenWrapper } from '../../packages/tokens/src';
 import { BigNumber } from 'ethers';
-import { Utxo } from '@webb-tools/utils';
+import { getChainIdType, Utxo } from '../../packages/utils/src';
 import { startGanacheServer } from '../helpers/startGanacheServer';
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe('multichain tests for signature vbridge', () => {
+  const chainID1 = getChainIdType(31337);
+  const chainID2 = getChainIdType(1337);
 
   // setup ganache networks
   let ganacheServer2: any;
@@ -60,28 +62,28 @@ describe('multichain tests for signature vbridge', () => {
 
     it('create 2 side bridge for one token', async () => {
       let webbTokens1 = new Map<number, GovernedTokenWrapper | undefined>();
-      webbTokens1.set(31337, null!);
-      webbTokens1.set(1337, null!);
+      webbTokens1.set(chainID1, null!);
+      webbTokens1.set(chainID2, null!);
       bridge2WebbEthInput = {
         vAnchorInputs: {
           asset: {
-            31337: [tokenInstance1.contract.address],
-            1337: [tokenInstance2.contract.address],
+            [chainID1]: [tokenInstance1.contract.address],
+            [chainID2]: [tokenInstance2.contract.address],
           }
       },
-        chainIDs: [31337, 1337],
+        chainIDs: [chainID1, chainID2],
         webbTokens: webbTokens1
       };
       const signers = await ethers.getSigners();
 
       const deploymentConfig = {
-        31337: signers[1],
-        1337: ganacheWallet2,
+        [chainID1]: signers[1],
+        [chainID2]: ganacheWallet2,
       };
       const vBridge = await VBridge.deployVariableAnchorBridge(bridge2WebbEthInput, deploymentConfig, false);
       // Should be able to retrieve individual anchors
-      const chainId1 = 31337;
-      const chainId2 = 1337;
+      const chainId1 = chainID1;
+      const chainId2 = chainID2;
       const vAnchor1: VAnchor = vBridge.getVAnchor(chainId1)! as VAnchor;
       const vAnchor2: VAnchor = vBridge.getVAnchor(chainId2)! as VAnchor;
       // Should be able to retrieve the token address (so we can mint tokens for test scenario)
@@ -116,14 +118,13 @@ describe('multichain tests for signature vbridge', () => {
   });
 
   describe('2 sided bridge existing token use', () => {
-
     // ERC20 compliant contracts that can easily create balances for test
     let existingToken1: MintableToken;
     let existingToken2: MintableToken;
 
     let vBridge: VBridge;
-    const chainId1 = 31337;
-    const chainId2 = 1337;
+    const chainId1 = chainID1;
+    const chainId2 = chainID2;
     let ganacheProvider2 = new ethers.providers.JsonRpcProvider('http://localhost:1337');
     ganacheProvider2.pollingInterval = 1;
     let ganacheWallet2 = new ethers.Wallet('c0d375903fd6f6ad3edafc2c5428900c0757ce1da10e5dd864fe387b32b91d7e', ganacheProvider2);
@@ -143,17 +144,17 @@ describe('multichain tests for signature vbridge', () => {
     beforeEach(async () => {
       const signers = await ethers.getSigners();
       let webbTokens1 = new Map<number, GovernedTokenWrapper | undefined>();
-      webbTokens1.set(31337, null!);
-      webbTokens1.set(1337, null!);
+      webbTokens1.set(chainID1, null!);
+      webbTokens1.set(chainID2, null!);
       // create the config for the bridge
       const vBridgeInput = {
         vAnchorInputs: {
           asset: {
-            31337: [existingToken1.contract.address],
-            1337: [existingToken2.contract.address],
+            [chainID1]: [existingToken1.contract.address],
+            [chainID2]: [existingToken2.contract.address],
           }
         },
-        chainIDs: [31337, 1337],
+        chainIDs: [chainID1, chainID2],
         webbTokens: webbTokens1
       }
 
@@ -205,7 +206,7 @@ describe('multichain tests for signature vbridge', () => {
 
         //check latest leaf index is incremented
         const destAnchorEdge2After = await vAnchor1.contract.edgeList(edgeIndex);
-        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex.add(2), destAnchorEdge2After.latestLeafIndex);
+        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex + 2, destAnchorEdge2After.latestLeafIndex);
 
         //withdraw ganacheWallet2 deposit on chainId1 to signers[2] address
         const hardhatWithdrawUtxo = new Utxo({amount: BigNumber.from(5e6), originChainId: BigNumber.from(chainId1), chainId: BigNumber.from(chainId1)})
@@ -233,7 +234,7 @@ describe('multichain tests for signature vbridge', () => {
 
         //check latest leaf index is incremented
         const destAnchorEdge2After = await vAnchor1.contract.edgeList(edgeIndex);
-        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex.add(4), destAnchorEdge2After.latestLeafIndex);
+        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex + 4, destAnchorEdge2After.latestLeafIndex);
         
         //withdraw ganacheWallet2 deposit on chainId1 to signers[2] address
         const hardhatWithdrawUtxo = new Utxo({amount: BigNumber.from(5e6), originChainId: BigNumber.from(chainId1), chainId: BigNumber.from(chainId1)})
@@ -264,7 +265,7 @@ describe('multichain tests for signature vbridge', () => {
 
         // Check the leaf index is incremented by two
         const destAnchorEdge2After = await vAnchor1.contract.edgeList(edgeIndex);
-        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex.add(4), destAnchorEdge2After.latestLeafIndex);
+        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex + 4, destAnchorEdge2After.latestLeafIndex);
 
         //withdraw ganacheWallet2 deposit on chainId1 to signers[2] address
         const hardhatWithdrawUtxo = new Utxo({amount: BigNumber.from(5e6), originChainId: BigNumber.from(chainId1), chainId: BigNumber.from(chainId1)})
@@ -320,7 +321,7 @@ describe('multichain tests for signature vbridge', () => {
 
         //check latest leaf index is incremented
         const destAnchorEdge2After = await vAnchor1.contract.edgeList(edgeIndex);
-        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex.add(2), destAnchorEdge2After.latestLeafIndex);
+        assert.deepStrictEqual(destAnchorEdge2Before.latestLeafIndex + 2, destAnchorEdge2After.latestLeafIndex);
 
         //withdrawing 3e7 from ganacheWallet2 deposit on chainId1 should work despite vanchor1 only having 1e7 webb tokens...this indicates that it minted 2e7 webb tokens to make up the balance
         const hardhatWithdrawUtxo = new Utxo({amount: BigNumber.from(2e7), originChainId: BigNumber.from(chainId1), chainId: BigNumber.from(chainId1)})
@@ -339,8 +340,8 @@ describe('multichain tests for signature vbridge', () => {
     let existingToken2: MintableToken;
 
     let vBridge: VBridge;
-    const chainId1 = 31337;
-    const chainId2 = 1337;
+    const chainId1 = chainID1;
+    const chainId2 = chainID2;
     let ganacheProvider2 = new ethers.providers.JsonRpcProvider('http://localhost:1337');
     ganacheProvider2.pollingInterval = 1;
     let ganacheWallet2 = new ethers.Wallet('c0d375903fd6f6ad3edafc2c5428900c0757ce1da10e5dd864fe387b32b91d7e', ganacheProvider2);
@@ -360,17 +361,17 @@ describe('multichain tests for signature vbridge', () => {
     beforeEach(async () => {
       const signers = await ethers.getSigners();
       let webbTokens1 = new Map<number, GovernedTokenWrapper | undefined>();
-      webbTokens1.set(31337, null!);
-      webbTokens1.set(1337, null!);
+      webbTokens1.set(chainID1, null!);
+      webbTokens1.set(chainID2, null!);
       // create the config for the bridge
       const vBridgeInput = {
         vAnchorInputs: {
           asset: {
-            31337: [existingToken1.contract.address],
-            1337: [existingToken2.contract.address],
+            [chainID1]: [existingToken1.contract.address],
+            [chainID2]: [existingToken2.contract.address],
           }
         },
-        chainIDs: [31337, 1337],
+        chainIDs: [chainID1, chainID2],
         webbTokens: webbTokens1
     }
 

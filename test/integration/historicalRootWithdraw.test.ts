@@ -1,5 +1,6 @@
-import { artifacts, contract } from "hardhat";
-import { MerkleTree } from "@webb-tools/merkle-tree";
+import { artifacts, contract } from 'hardhat';
+import { MerkleTree } from '../../packages/merkle-tree/src';
+import { getChainIdType } from '../../packages/utils/src';
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 const helpers = require('../helpers');
@@ -29,8 +30,8 @@ const Scalar = require('ffjavascript').Scalar;
 contract('E2E LinkableAnchors - Cross chain withdraw using historical root should work', async accounts => {
   const relayerThreshold = 1;
   // Note: we have to use the same chainID for tests since Hardhat can't simulate 2 networks
-  const originChainID = 31337;
-  const destChainID = 31337;
+  const originChainID = getChainIdType(31337);
+  const destChainID = getChainIdType(31337);
   const relayer1Address = accounts[3];
   const operator = accounts[6];
   const initialTokenMintAmount = BigInt(1e25);
@@ -120,7 +121,7 @@ contract('E2E LinkableAnchors - Cross chain withdraw using historical root shoul
     ]);
 
     createWitness = async (data) => {
-      const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/bridge/2/witness_calculator.js");
+      const witnessCalculator = require('../../protocol-solidity-fixtures/fixtures/bridge/2/witness_calculator.js');
       const fileBuf = require('fs').readFileSync('./protocol-solidity-fixtures/fixtures/bridge/2/poseidon_bridge_2.wasm');
       const wtnsCalc = await witnessCalculator(fileBuf)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);

@@ -21,10 +21,10 @@ import {
 } from '../../typechain';
 
 // Convenience wrapper classes for contract classes
-import { Verifier } from '@webb-tools/bridges'
-import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from '@webb-tools/utils';
-import { Anchor, AnchorProxy } from '@webb-tools/anchors';
-import { MerkleTree } from '@webb-tools/merkle-tree';
+import { Verifier } from '../../packages/bridges/src';
+import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from '../../packages/utils/src';
+import { Anchor, AnchorProxy } from '../../packages/anchors/src';
+import { MerkleTree } from '../../packages/merkle-tree/src';
 
 const { NATIVE_AMOUNT } = process.env
 const snarkjs = require('snarkjs')
@@ -50,7 +50,7 @@ describe('AnchorProxy', () => {
   let token: Token;
   let wrappedToken: WrappedToken;
   let tokenDenomination = '1000000000000000000' // 1 ether
-  const chainID = 31337;
+  let chainID;
   const MAX_EDGES = 1;
   let createWitness: any;
   
@@ -124,6 +124,10 @@ describe('AnchorProxy', () => {
 
     // approve the anchor to spend the minted funds
     await token.approve(anchorProxy.contract.address, '10000000000000000000000');
+
+    const CHAIN_TYPE = '0x0100';
+    const chainIdType = CHAIN_TYPE + toFixedHex((value) ? value : (await sender.getChainId()), 4).substr(2);
+    chainID = BigInt(chainIdType);
 
     createWitness = async (data: any) => {
       const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/bridge/2/witness_calculator.js");

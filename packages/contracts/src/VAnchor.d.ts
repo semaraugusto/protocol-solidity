@@ -30,10 +30,10 @@ interface VAnchorInterface extends ethers.utils.Interface {
     "calculatePublicAmount(int256,uint256)": FunctionFragment;
     "commitments(bytes32)": FunctionFragment;
     "configureLimits(uint256,uint256)": FunctionFragment;
-    "currentNeighborRootIndex(uint256)": FunctionFragment;
+    "currentNeighborRootIndex(uint64)": FunctionFragment;
     "currentRootIndex()": FunctionFragment;
-    "edgeExistsForChain(uint256)": FunctionFragment;
-    "edgeIndex(uint256)": FunctionFragment;
+    "edgeExistsForChain(uint64)": FunctionFragment;
+    "edgeIndex(uint64)": FunctionFragment;
     "edgeList(uint256)": FunctionFragment;
     "filledSubtrees(uint256)": FunctionFragment;
     "getChainId()": FunctionFragment;
@@ -42,11 +42,11 @@ interface VAnchorInterface extends ethers.utils.Interface {
     "getLatestNeighborRoots()": FunctionFragment;
     "getProposalNonce()": FunctionFragment;
     "handler()": FunctionFragment;
-    "hasEdge(uint256)": FunctionFragment;
+    "hasEdge(uint64)": FunctionFragment;
     "hashLeftRight(address,bytes32,bytes32)": FunctionFragment;
     "hasher()": FunctionFragment;
     "initialize(uint256,uint256)": FunctionFragment;
-    "isKnownNeighborRoot(uint256,bytes32)": FunctionFragment;
+    "isKnownNeighborRoot(uint64,bytes32)": FunctionFragment;
     "isKnownRoot(bytes32)": FunctionFragment;
     "isSpent(bytes32)": FunctionFragment;
     "isSpentArray(bytes32[])": FunctionFragment;
@@ -56,7 +56,7 @@ interface VAnchorInterface extends ethers.utils.Interface {
     "maxEdges()": FunctionFragment;
     "maximumDepositAmount()": FunctionFragment;
     "minimalWithdrawalAmount()": FunctionFragment;
-    "neighborRoots(uint256,uint32)": FunctionFragment;
+    "neighborRoots(uint64,uint32)": FunctionFragment;
     "nextIndex()": FunctionFragment;
     "nullifierHashes(bytes32)": FunctionFragment;
     "register((address,bytes))": FunctionFragment;
@@ -71,7 +71,7 @@ interface VAnchorInterface extends ethers.utils.Interface {
     "unpackProof(uint256[8])": FunctionFragment;
     "unwrapIntoNative(address,uint256)": FunctionFragment;
     "unwrapIntoToken(address,uint256)": FunctionFragment;
-    "updateEdge(uint256,bytes32,uint256)": FunctionFragment;
+    "updateEdge(uint64,bytes32,uint32)": FunctionFragment;
     "verifier()": FunctionFragment;
     "withdrawAndUnwrap(address,address,uint256)": FunctionFragment;
     "wrapAndDeposit(address,uint256)": FunctionFragment;
@@ -509,8 +509,8 @@ interface VAnchorInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "zeros", data: BytesLike): Result;
 
   events: {
-    "EdgeAddition(uint256,uint256,bytes32)": EventFragment;
-    "EdgeUpdate(uint256,uint256,bytes32)": EventFragment;
+    "EdgeAddition(uint64,uint32,bytes32)": EventFragment;
+    "EdgeUpdate(uint64,uint32,bytes32)": EventFragment;
     "Insertion(bytes32,uint32,uint256)": EventFragment;
     "NewCommitment(bytes32,uint256,bytes)": EventFragment;
     "NewNullifier(bytes32)": EventFragment;
@@ -526,17 +526,17 @@ interface VAnchorInterface extends ethers.utils.Interface {
 }
 
 export type EdgeAdditionEvent = TypedEvent<
-  [BigNumber, BigNumber, string] & {
+  [BigNumber, number, string] & {
     chainID: BigNumber;
-    latestLeafIndex: BigNumber;
+    latestLeafIndex: number;
     merkleRoot: string;
   }
 >;
 
 export type EdgeUpdateEvent = TypedEvent<
-  [BigNumber, BigNumber, string] & {
+  [BigNumber, number, string] & {
     chainID: BigNumber;
-    latestLeafIndex: BigNumber;
+    latestLeafIndex: number;
     merkleRoot: string;
   }
 >;
@@ -643,19 +643,16 @@ export class VAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    edgeIndex(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<[number]>;
 
     edgeList(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber] & {
+      [BigNumber, string, number] & {
         chainID: BigNumber;
         root: string;
-        latestLeafIndex: BigNumber;
+        latestLeafIndex: number;
       }
     >;
 
@@ -672,16 +669,16 @@ export class VAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [
-        ([BigNumber, string, BigNumber] & {
+        ([BigNumber, string, number] & {
           chainID: BigNumber;
           root: string;
-          latestLeafIndex: BigNumber;
+          latestLeafIndex: number;
         })[]
       ] & {
-        edges: ([BigNumber, string, BigNumber] & {
+        edges: ([BigNumber, string, number] & {
           chainID: BigNumber;
           root: string;
-          latestLeafIndex: BigNumber;
+          latestLeafIndex: number;
         })[];
       }
     >;
@@ -971,16 +968,16 @@ export class VAnchor extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+  edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
   edgeList(
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, string, BigNumber] & {
+    [BigNumber, string, number] & {
       chainID: BigNumber;
       root: string;
-      latestLeafIndex: BigNumber;
+      latestLeafIndex: number;
     }
   >;
 
@@ -996,10 +993,10 @@ export class VAnchor extends BaseContract {
   getLatestNeighborEdges(
     overrides?: CallOverrides
   ): Promise<
-    ([BigNumber, string, BigNumber] & {
+    ([BigNumber, string, number] & {
       chainID: BigNumber;
       root: string;
-      latestLeafIndex: BigNumber;
+      latestLeafIndex: number;
     })[]
   >;
 
@@ -1274,19 +1271,16 @@ export class VAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    edgeIndex(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
     edgeList(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber] & {
+      [BigNumber, string, number] & {
         chainID: BigNumber;
         root: string;
-        latestLeafIndex: BigNumber;
+        latestLeafIndex: number;
       }
     >;
 
@@ -1302,10 +1296,10 @@ export class VAnchor extends BaseContract {
     getLatestNeighborEdges(
       overrides?: CallOverrides
     ): Promise<
-      ([BigNumber, string, BigNumber] & {
+      ([BigNumber, string, number] & {
         chainID: BigNumber;
         root: string;
-        latestLeafIndex: BigNumber;
+        latestLeafIndex: number;
       })[]
     >;
 
@@ -1552,13 +1546,13 @@ export class VAnchor extends BaseContract {
   };
 
   filters: {
-    "EdgeAddition(uint256,uint256,bytes32)"(
+    "EdgeAddition(uint64,uint32,bytes32)"(
       chainID?: null,
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
     EdgeAddition(
@@ -1566,17 +1560,17 @@ export class VAnchor extends BaseContract {
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
-    "EdgeUpdate(uint256,uint256,bytes32)"(
+    "EdgeUpdate(uint64,uint32,bytes32)"(
       chainID?: null,
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
     EdgeUpdate(
@@ -1584,8 +1578,8 @@ export class VAnchor extends BaseContract {
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
     "Insertion(bytes32,uint32,uint256)"(

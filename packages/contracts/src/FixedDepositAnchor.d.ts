@@ -22,16 +22,17 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface FixedDepositAnchorInterface extends ethers.utils.Interface {
   functions: {
+    "EVM_CHAIN_ID_TYPE()": FunctionFragment;
     "FIELD_SIZE()": FunctionFragment;
     "ROOT_HISTORY_SIZE()": FunctionFragment;
     "ZERO_VALUE()": FunctionFragment;
     "commitments(bytes32)": FunctionFragment;
-    "currentNeighborRootIndex(uint256)": FunctionFragment;
+    "currentNeighborRootIndex(uint64)": FunctionFragment;
     "currentRootIndex()": FunctionFragment;
     "denomination()": FunctionFragment;
     "deposit(bytes32)": FunctionFragment;
-    "edgeExistsForChain(uint256)": FunctionFragment;
-    "edgeIndex(uint256)": FunctionFragment;
+    "edgeExistsForChain(uint64)": FunctionFragment;
+    "edgeIndex(uint64)": FunctionFragment;
     "edgeList(uint256)": FunctionFragment;
     "filledSubtrees(uint256)": FunctionFragment;
     "getChainId()": FunctionFragment;
@@ -42,17 +43,17 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
     "getProposalNonce()": FunctionFragment;
     "getToken()": FunctionFragment;
     "handler()": FunctionFragment;
-    "hasEdge(uint256)": FunctionFragment;
+    "hasEdge(uint64)": FunctionFragment;
     "hashLeftRight(address,bytes32,bytes32)": FunctionFragment;
     "hasher()": FunctionFragment;
-    "isKnownNeighborRoot(uint256,bytes32)": FunctionFragment;
+    "isKnownNeighborRoot(uint64,bytes32)": FunctionFragment;
     "isKnownRoot(bytes32)": FunctionFragment;
     "isSpent(bytes32)": FunctionFragment;
     "isSpentArray(bytes32[])": FunctionFragment;
     "isValidRoots(bytes32[])": FunctionFragment;
     "levels()": FunctionFragment;
     "maxEdges()": FunctionFragment;
-    "neighborRoots(uint256,uint32)": FunctionFragment;
+    "neighborRoots(uint64,uint32)": FunctionFragment;
     "nextIndex()": FunctionFragment;
     "nullifierHashes(bytes32)": FunctionFragment;
     "roots(uint256)": FunctionFragment;
@@ -62,7 +63,7 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
     "unpackProof(uint256[8])": FunctionFragment;
     "unwrapIntoNative(address,uint256)": FunctionFragment;
     "unwrapIntoToken(address,uint256)": FunctionFragment;
-    "updateEdge(uint256,bytes32,uint256)": FunctionFragment;
+    "updateEdge(uint64,bytes32,uint32)": FunctionFragment;
     "verifier()": FunctionFragment;
     "withdraw(bytes,(bytes,bytes32,bytes32,address,address,uint256,uint256))": FunctionFragment;
     "withdrawAndUnwrap(bytes,(bytes,bytes32,bytes32,address,address,uint256,uint256),address)": FunctionFragment;
@@ -72,6 +73,10 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
     "zeros(uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "EVM_CHAIN_ID_TYPE",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "FIELD_SIZE",
     values?: undefined
@@ -263,6 +268,10 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "zeros", values: [BigNumberish]): string;
 
+  decodeFunctionResult(
+    functionFragment: "EVM_CHAIN_ID_TYPE",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "FIELD_SIZE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "ROOT_HISTORY_SIZE",
@@ -389,8 +398,8 @@ interface FixedDepositAnchorInterface extends ethers.utils.Interface {
 
   events: {
     "Deposit(address,uint32,bytes32,uint256)": EventFragment;
-    "EdgeAddition(uint256,uint256,bytes32)": EventFragment;
-    "EdgeUpdate(uint256,uint256,bytes32)": EventFragment;
+    "EdgeAddition(uint64,uint32,bytes32)": EventFragment;
+    "EdgeUpdate(uint64,uint32,bytes32)": EventFragment;
     "Insertion(bytes32,uint32,uint256)": EventFragment;
     "Refresh(bytes32,bytes32,uint32)": EventFragment;
     "Withdrawal(address,address,uint256)": EventFragment;
@@ -414,17 +423,17 @@ export type DepositEvent = TypedEvent<
 >;
 
 export type EdgeAdditionEvent = TypedEvent<
-  [BigNumber, BigNumber, string] & {
+  [BigNumber, number, string] & {
     chainID: BigNumber;
-    latestLeafIndex: BigNumber;
+    latestLeafIndex: number;
     merkleRoot: string;
   }
 >;
 
 export type EdgeUpdateEvent = TypedEvent<
-  [BigNumber, BigNumber, string] & {
+  [BigNumber, number, string] & {
     chainID: BigNumber;
-    latestLeafIndex: BigNumber;
+    latestLeafIndex: number;
     merkleRoot: string;
   }
 >;
@@ -493,6 +502,8 @@ export class FixedDepositAnchor extends BaseContract {
   interface: FixedDepositAnchorInterface;
 
   functions: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<[string]>;
+
     FIELD_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<[number]>;
@@ -520,19 +531,16 @@ export class FixedDepositAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    edgeIndex(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<[number]>;
 
     edgeList(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber] & {
+      [BigNumber, string, number] & {
         chainID: BigNumber;
         root: string;
-        latestLeafIndex: BigNumber;
+        latestLeafIndex: number;
       }
     >;
 
@@ -551,16 +559,16 @@ export class FixedDepositAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [
-        ([BigNumber, string, BigNumber] & {
+        ([BigNumber, string, number] & {
           chainID: BigNumber;
           root: string;
-          latestLeafIndex: BigNumber;
+          latestLeafIndex: number;
         })[]
       ] & {
-        edges: ([BigNumber, string, BigNumber] & {
+        edges: ([BigNumber, string, number] & {
           chainID: BigNumber;
           root: string;
-          latestLeafIndex: BigNumber;
+          latestLeafIndex: number;
         })[];
       }
     >;
@@ -737,6 +745,8 @@ export class FixedDepositAnchor extends BaseContract {
     zeros(i: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
   };
 
+  EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<string>;
+
   FIELD_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
   ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<number>;
@@ -764,16 +774,16 @@ export class FixedDepositAnchor extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+  edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
   edgeList(
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, string, BigNumber] & {
+    [BigNumber, string, number] & {
       chainID: BigNumber;
       root: string;
-      latestLeafIndex: BigNumber;
+      latestLeafIndex: number;
     }
   >;
 
@@ -791,10 +801,10 @@ export class FixedDepositAnchor extends BaseContract {
   getLatestNeighborEdges(
     overrides?: CallOverrides
   ): Promise<
-    ([BigNumber, string, BigNumber] & {
+    ([BigNumber, string, number] & {
       chainID: BigNumber;
       root: string;
-      latestLeafIndex: BigNumber;
+      latestLeafIndex: number;
     })[]
   >;
 
@@ -956,6 +966,8 @@ export class FixedDepositAnchor extends BaseContract {
   zeros(i: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<string>;
+
     FIELD_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<number>;
@@ -980,19 +992,16 @@ export class FixedDepositAnchor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    edgeIndex(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    edgeIndex(arg0: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
     edgeList(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, BigNumber] & {
+      [BigNumber, string, number] & {
         chainID: BigNumber;
         root: string;
-        latestLeafIndex: BigNumber;
+        latestLeafIndex: number;
       }
     >;
 
@@ -1010,10 +1019,10 @@ export class FixedDepositAnchor extends BaseContract {
     getLatestNeighborEdges(
       overrides?: CallOverrides
     ): Promise<
-      ([BigNumber, string, BigNumber] & {
+      ([BigNumber, string, number] & {
         chainID: BigNumber;
         root: string;
-        latestLeafIndex: BigNumber;
+        latestLeafIndex: number;
       })[]
     >;
 
@@ -1213,13 +1222,13 @@ export class FixedDepositAnchor extends BaseContract {
       }
     >;
 
-    "EdgeAddition(uint256,uint256,bytes32)"(
+    "EdgeAddition(uint64,uint32,bytes32)"(
       chainID?: null,
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
     EdgeAddition(
@@ -1227,17 +1236,17 @@ export class FixedDepositAnchor extends BaseContract {
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
-    "EdgeUpdate(uint256,uint256,bytes32)"(
+    "EdgeUpdate(uint64,uint32,bytes32)"(
       chainID?: null,
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
     EdgeUpdate(
@@ -1245,8 +1254,8 @@ export class FixedDepositAnchor extends BaseContract {
       latestLeafIndex?: null,
       merkleRoot?: null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { chainID: BigNumber; latestLeafIndex: BigNumber; merkleRoot: string }
+      [BigNumber, number, string],
+      { chainID: BigNumber; latestLeafIndex: number; merkleRoot: string }
     >;
 
     "Insertion(bytes32,uint32,uint256)"(
@@ -1305,6 +1314,8 @@ export class FixedDepositAnchor extends BaseContract {
   };
 
   estimateGas: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<BigNumber>;
+
     FIELD_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1517,6 +1528,8 @@ export class FixedDepositAnchor extends BaseContract {
   };
 
   populateTransaction: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     FIELD_SIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;

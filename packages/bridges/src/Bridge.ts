@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { ZkComponents } from "@webb-tools/utils";
+import { getChainIdType, ZkComponents } from "@webb-tools/utils";
 import { PoseidonT3__factory } from "@webb-tools/contracts";
 import { IAnchor, AnchorIdentifier, BridgeConfig, BridgeInput, DeployerConfig, IAnchorDeposit } from '@webb-tools/interfaces';
 import { Anchor, AnchorHandler } from '@webb-tools/anchors';
@@ -236,7 +236,7 @@ export class Bridge {
   }
 
   public getAnchor(chainId: number, anchorSize: ethers.BigNumberish) {
-    let intendedAnchor: IAnchor | undefined = undefined;
+    let intendedAnchor: IAnchor = undefined;
     intendedAnchor = this.anchors.get(Bridge.createAnchorIdString({anchorSize, chainId}));
     return intendedAnchor;
   }
@@ -255,7 +255,7 @@ export class Bridge {
   }
 
   public async deposit(destinationChainId: number, anchorSize: ethers.BigNumberish, signer: ethers.Signer) {
-    const chainId = await signer.getChainId();
+    const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const anchor = this.getAnchor(chainId, anchorSize);
     if (!anchor) {
@@ -292,7 +292,7 @@ export class Bridge {
   }
 
   public async wrapAndDeposit(destinationChainId: number, tokenAddress: string, anchorSize: ethers.BigNumberish, signer: ethers.Signer) {
-    const chainId = await signer.getChainId();
+    const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const anchor = this.getAnchor(chainId, anchorSize);
     if (!anchor) {
@@ -350,7 +350,7 @@ export class Bridge {
     signer: ethers.Signer
   ) {
     // Construct the proof from the origin anchor
-    const anchorToProve = this.getAnchor(depositInfo.originChainId, anchorSize);
+    const anchorToProve = this.getAnchor(Number(depositInfo.originChainId), anchorSize);
     if (!anchorToProve) {
       throw new Error("Could not find anchor to prove against");
     }
@@ -381,7 +381,7 @@ export class Bridge {
     signer: ethers.Signer
   ) {
     // Construct the proof from the origin anchor
-    const anchorToProve = this.getAnchor(depositInfo.originChainId, anchorSize);
+    const anchorToProve = this.getAnchor(Number(depositInfo.originChainId), anchorSize);
     if (!anchorToProve) {
       throw new Error("Could not find anchor to prove against");
     }

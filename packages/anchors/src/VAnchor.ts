@@ -79,8 +79,15 @@ export class VAnchor implements IAnchor {
         this.largeWitnessCalculator = require("../../../protocol-solidity-fixtures/fixtures/vanchor_16/2/witness_calculator.js");
         break;
     }
-
   }
+
+  public async getChainIdType(): Promise<bigint> {
+    const CHAIN_TYPE = '0x0100';
+    const chainID = await this.signer.getChainId();
+    const chainIdType = CHAIN_TYPE + toFixedHex(chainID, 4).substr(2);
+    return BigInt(chainIdType);
+  }
+
   deposit(destinationChainId: number) {
     throw new Error("Method not implemented.");
   }
@@ -238,10 +245,10 @@ export class VAnchor implements IAnchor {
   }
 
   public async createResourceId(): Promise<string> {
+    const chainIDType = await this.getChainIdType();
     return toHex(
       this.contract.address
-        + toHex(1, 2).substr(2)
-        + toHex((await this.signer.getChainId()), 4).substr(2),
+        + toHex(chainIDType, 6).substr(2),
       32);
   }
 
@@ -286,7 +293,7 @@ export class VAnchor implements IAnchor {
       toHex(resourceID, 32).substr(2)+ 
       functionSig.slice(2) + 
       toHex(dummyNonce,4).substr(2) +
-      toHex(chainID, 4).substr(2) + 
+      toHex(chainID, 6).substr(2) + 
       toHex(leafIndex, 4).substr(2) + 
       toHex(merkleRoot, 32).substr(2);
   }
@@ -508,7 +515,7 @@ export class VAnchor implements IAnchor {
   ) {
     // first, check if the merkle root is known on chain - if not, then update
     await this.checkKnownRoot();
-    const chainId = await this.signer.getChainId();
+    const chainId = await this.getChainIdType();
     const roots = await this.populateRootInfosForProof();
     const { input, extData } = await this.generateWitnessInput(
       roots,
@@ -558,17 +565,16 @@ export class VAnchor implements IAnchor {
     recipient: string = '0', 
     relayer: string = '0'
   ) {
-    //console.log(`current root (transact, contract) is ${toFixedHex(await this.contract.getLastRoot())}`);
-    
+    const chainIdType = await this.getChainIdType();
     while (inputs.length !== 2 && inputs.length < 16) {
-      inputs.push(new Utxo({chainId: BigNumber.from(31337)}));
+      inputs.push(new Utxo({chainId: BigNumber.from(chainIdType)}));
     }
     
     const merkleProofsForInputs = inputs.map((x) => this.getMerkleProof(x));
     
     if (outputs.length < 2) {
       while (outputs.length < 2) {
-        outputs.push(new Utxo({chainId: BigNumber.from(31337)}));
+        outputs.push(new Utxo({chainId: BigNumber.from(chainIdType)}));
       }
     }
     
@@ -611,17 +617,16 @@ export class VAnchor implements IAnchor {
     recipient: string = '0', 
     relayer: string = '0'
   ): Promise<ethers.ContractReceipt> {
-    //console.log(`current root (transact, contract) is ${toFixedHex(await this.contract.getLastRoot())}`);
-    
+    const chainIdType = await this.getChainIdType();
     while (inputs.length !== 2 && inputs.length < 16) {
-      inputs.push(new Utxo({chainId: BigNumber.from(31337)}));
+      inputs.push(new Utxo({chainId: BigNumber.from(chainIdType)}));
     }
     
     const merkleProofsForInputs = inputs.map((x) => this.getMerkleProof(x));
     
     if (outputs.length < 2) {
       while (outputs.length < 2) {
-        outputs.push(new Utxo({chainId: BigNumber.from(31337)}));
+        outputs.push(new Utxo({chainId: BigNumber.from(chainIdType)}));
       }
     }
     
@@ -740,9 +745,10 @@ export class VAnchor implements IAnchor {
       throw new Error('Merkle proofs has different length than inputs');
     }
 
+    const chainID = await this.getChainIdType();
     if (outputs.length < 2) {
       while (outputs.length < 2) {
-        outputs.push(new Utxo({originChainId: BigNumber.from(await this.signer.getChainId())}));
+        outputs.push(new Utxo({originChainId: BigNumber.from(chainID)}));
       }
     }
 
@@ -807,9 +813,9 @@ export class VAnchor implements IAnchor {
   ) {
     //console.log(`current root (registertransact, contract) is ${toFixedHex(await this.contract.getLastRoot())}`);
     // const { pathElements, pathIndices, merkleRoot } = merkleProofsForInputs;
-
+    const chainIdType = await this.getChainIdType();
     while (inputs.length !== 2 && inputs.length < 16) {
-      inputs.push(new Utxo({chainId: BigNumber.from(31337)}));
+      inputs.push(new Utxo({chainId: BigNumber.from(chainIdType)}));
     }
 
     merkleProofsForInputs = inputs.map((x) => this.getMerkleProof(x));
@@ -820,7 +826,7 @@ export class VAnchor implements IAnchor {
     
     if (outputs.length < 2) {
       while (outputs.length < 2) {
-        outputs.push(new Utxo({chainId: BigNumber.from(31337)}));
+        outputs.push(new Utxo({chainId: BigNumber.from(chainIdType)}));
       }
     }
 

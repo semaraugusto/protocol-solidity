@@ -6,7 +6,7 @@ import { PoseidonT3__factory } from "@webb-tools/contracts";
 import Verifier from "./Verifier";
 import { AnchorIdentifier, IAnchor } from "@webb-tools/interfaces";
 import { AnchorHandler, VAnchor } from "@webb-tools/anchors";
-import { Utxo } from "@webb-tools/utils";
+import { getChainIdType, Utxo } from "@webb-tools/utils";
 
 // Deployer config matches the chainId to the signer for that chain
 export type DeployerConfig = Record<number, ethers.Signer>;
@@ -324,7 +324,7 @@ export class VBridge {
     relayer: string,
     signer:ethers.Signer
     ) {
-    const chainId = await signer.getChainId();
+    const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const vAnchor = this.getVAnchor(chainId);
     if (!vAnchor) {
@@ -333,7 +333,7 @@ export class VBridge {
     vAnchor.setSigner(signer);
 
     while (inputs.length !== 2 && inputs.length < 16) {
-      inputs.push(new Utxo({chainId: BigNumber.from(await signer.getChainId())}));
+      inputs.push(new Utxo({chainId: BigNumber.from(chainId)}));
     }
     
     //do we have to check if amount is greater than 0 before the checks?????
@@ -389,7 +389,7 @@ export class VBridge {
     signer:ethers.Signer
     ) {
     
-    const chainId = await signer.getChainId();
+    const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const vAnchor = this.getVAnchor(chainId);
     if (!vAnchor) {
@@ -398,7 +398,7 @@ export class VBridge {
     vAnchor.setSigner(signer);
 
     while (inputs.length !== 2 && inputs.length < 16) {
-      inputs.push(new Utxo({chainId: BigNumber.from(await signer.getChainId())}));
+      inputs.push(new Utxo({chainId: BigNumber.from(chainId)}));
     }
     //console.log(inputs.length);
     //do we have to check if amount is greater than 0 before the checks?????

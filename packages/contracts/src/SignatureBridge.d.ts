@@ -21,6 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SignatureBridgeInterface extends ethers.utils.Interface {
   functions: {
+    "EVM_CHAIN_ID_TYPE()": FunctionFragment;
     "_counts(uint256)": FunctionFragment;
     "_resourceIDToHandlerAddress(bytes32)": FunctionFragment;
     "adminMigrateBridgeWithSignature(bytes32[],address,bytes)": FunctionFragment;
@@ -41,6 +42,10 @@ interface SignatureBridgeInterface extends ethers.utils.Interface {
     "verify(bytes32,uint8,bytes32,bytes32)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "EVM_CHAIN_ID_TYPE",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "_counts",
     values: [BigNumberish]
@@ -108,6 +113,10 @@ interface SignatureBridgeInterface extends ethers.utils.Interface {
     values: [BytesLike, BigNumberish, BytesLike, BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "EVM_CHAIN_ID_TYPE",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "_counts", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "_resourceIDToHandlerAddress",
@@ -231,6 +240,8 @@ export class SignatureBridge extends BaseContract {
   interface: SignatureBridgeInterface;
 
   functions: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<[string]>;
+
     _counts(
       arg0: BigNumberish,
       overrides?: CallOverrides
@@ -322,6 +333,8 @@ export class SignatureBridge extends BaseContract {
     ): Promise<[boolean]>;
   };
 
+  EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<string>;
+
   _counts(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
   _resourceIDToHandlerAddress(
@@ -407,6 +420,8 @@ export class SignatureBridge extends BaseContract {
   ): Promise<boolean>;
 
   callStatic: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<string>;
+
     _counts(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     _resourceIDToHandlerAddress(
@@ -529,6 +544,8 @@ export class SignatureBridge extends BaseContract {
   };
 
   estimateGas: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<BigNumber>;
+
     _counts(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     _resourceIDToHandlerAddress(
@@ -618,6 +635,8 @@ export class SignatureBridge extends BaseContract {
   };
 
   populateTransaction: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     _counts(
       arg0: BigNumberish,
       overrides?: CallOverrides

@@ -12,7 +12,7 @@ import {
   GovernedTokenWrapper as WrappedToken,
   GovernedTokenWrapper__factory as WrappedTokenFactory,
   PoseidonT3__factory
-} from '@webb-tools/contracts';
+} from '../../packages/contracts';
 
 // These contracts are not included in the package, so can use generated typechain
 import {
@@ -21,14 +21,14 @@ import {
 } from '../../typechain';
 
 // Convenience wrapper classes for contract classes
-import { toFixedHex } from '@webb-tools/utils';
+import { getChainIdType, toFixedHex } from '../../packages/utils/src';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
-import { MerkleTree } from '@webb-tools/merkle-tree';
-import { Utxo, poseidonHash, poseidonHash2 } from '@webb-tools/utils';
-import { VAnchor } from '@webb-tools/anchors';
-import { Verifier } from "@webb-tools/vbridge"
+import { MerkleTree } from '../../packages/merkle-tree/src';
+import { Utxo, poseidonHash, poseidonHash2 } from '../../packages/utils/src';
+import { VAnchor } from '../../packages/anchors/src';
+import { Verifier } from '../../packages/vbridge/src';
 
 const { NATIVE_AMOUNT } = process.env
 const BN = require('bn.js');
@@ -44,13 +44,13 @@ describe('VAnchor for 2 max edges', () => {
   let tree: MerkleTree;
   let fee = BigInt((new BN(`${NATIVE_AMOUNT}`).shrn(1)).toString()) || BigInt((new BN(`${1e17}`)).toString());
   const refund = BigInt((new BN('0')).toString()); 
-  let recipient = "0x1111111111111111111111111111111111111111";
+  let recipient = '0x1111111111111111111111111111111111111111';
   let verifier: Verifier;
   let hasherInstance: any;
   let token: Token;
   let wrappedToken: WrappedToken;
   let tokenDenomination = '1000000000000000000' // 1 ether
-  const chainID = 31337;
+  const chainID = getChainIdType(31337);
   const MAX_EDGES = 1;
   let create2InputWitness: any;
   let create16InputWitness: any;
@@ -95,7 +95,7 @@ describe('VAnchor for 2 max edges', () => {
     await token.approve(anchor.contract.address, '10000000000000000000000');
 
     createInputWitnessPoseidon4 = async (data: any) => {
-      const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/poseidon4/4/witness_calculator.js");
+      const witnessCalculator = require('../../protocol-solidity-fixtures/fixtures/poseidon4/4/witness_calculator.js');
       const fileBuf = require('fs').readFileSync('protocol-solidity-fixtures/fixtures/poseidon4/4/poseidon4_test.wasm');
       const wtnsCalc = await witnessCalculator(fileBuf)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);
@@ -103,7 +103,7 @@ describe('VAnchor for 2 max edges', () => {
     }
 
     create2InputWitness = async (data: any) => {
-      const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/vanchor_2/2/witness_calculator.js");
+      const witnessCalculator = require('../../protocol-solidity-fixtures/fixtures/vanchor_2/2/witness_calculator.js');
       const fileBuf = require('fs').readFileSync('protocol-solidity-fixtures/fixtures/vanchor_2/2/poseidon_vanchor_2_2.wasm');
       const wtnsCalc = await witnessCalculator(fileBuf)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);
@@ -111,8 +111,8 @@ describe('VAnchor for 2 max edges', () => {
     }
 
     create16InputWitness = async (data: any) => {
-      const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/vanchor_16/2/witness_calculator.js");
-      const fileBuf = require('fs').readFileSync("protocol-solidity-fixtures/fixtures/vanchor_16/2/poseidon_vanchor_16_2.wasm");
+      const witnessCalculator = require('../../protocol-solidity-fixtures/fixtures/vanchor_16/2/witness_calculator.js');
+      const fileBuf = require('fs').readFileSync('protocol-solidity-fixtures/fixtures/vanchor_16/2/poseidon_vanchor_16_2.wasm');
       const wtnsCalc = await witnessCalculator(fileBuf)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);
       return wtns;
@@ -129,7 +129,7 @@ describe('VAnchor for 2 max edges', () => {
 
   describe('snark proof native verification on js side', () => {
     it('should work', async () => {
-      const relayer = "0x2111111111111111111111111111111111111111";
+      const relayer = '0x2111111111111111111111111111111111111111';
       const extAmount = 1e7;
       const isL1Withdrawal = false;
       const roots = await anchor.populateRootInfosForProof();
@@ -171,7 +171,7 @@ describe('VAnchor for 2 max edges', () => {
     });
 
     it('poseidon4 isolated gadget test', async () => {
-      const relayer = "0x2111111111111111111111111111111111111111";
+      const relayer = '0x2111111111111111111111111111111111111111';
       const extAmount = 1e7;
       const isL1Withdrawal = false;
       const roots = await anchor.populateRootInfosForProof();
@@ -189,11 +189,11 @@ describe('VAnchor for 2 max edges', () => {
       // const input = await anchor.generateWitnessInputPoseidon4(
      
       // );
-      const output = new Utxo({chainId: BigNumber.from(31337), amount: BigNumber.from(0), 
+      const output = new Utxo({chainId: BigNumber.from(chainID), amount: BigNumber.from(0), 
         blinding: BigNumber.from(13)})
       const input = {
         // data for 2 transaction outputs
-      outChainID: 31337,
+      outChainID: chainID,
       outAmount: 0,
       outPubkey: output.keypair.pubkey,
       outBlinding: toFixedHex(13),
@@ -260,7 +260,7 @@ describe('VAnchor for 2 max edges', () => {
       });
       //Step 1: Alice deposits into Tornado Pool
       const aliceBalanceBeforeDeposit = await token.balanceOf(alice.address);
-      const relayer = "0x2111111111111111111111111111111111111111";
+      const relayer = '0x2111111111111111111111111111111111111111';
       const fee = 1e6;
       await anchor.registerAndTransact(
         sender.address,
@@ -555,7 +555,7 @@ describe('VAnchor for 2 max edges', () => {
     });
 
     it('should reject tampering with public inputs', async () => {
-      const relayer = "0x2111111111111111111111111111111111111111";
+      const relayer = '0x2111111111111111111111111111111111111111';
       const extAmount = 1e7;
       const isL1Withdrawal = false;
       const roots = await anchor.populateRootInfosForProof();
@@ -778,7 +778,7 @@ describe('VAnchor for 2 max edges', () => {
       // nullifier = hash(commitment, merklePath, sign(merklePath, privKey))
       const dataForVerifier = {
         commitment: {
-          chainId: 31337,
+          chainId: chainID,
           amount: aliceDepositUtxo.amount,
           pubkey: aliceDepositUtxo.keypair.pubkey,
           blinding: aliceDepositUtxo.blinding,

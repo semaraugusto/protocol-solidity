@@ -12,15 +12,15 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint64",
         name: "chainID",
-        type: "uint256",
+        type: "uint64",
       },
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint32",
         name: "latestLeafIndex",
-        type: "uint256",
+        type: "uint32",
       },
       {
         indexed: false,
@@ -37,15 +37,15 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint64",
         name: "chainID",
-        type: "uint256",
+        type: "uint64",
       },
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint32",
         name: "latestLeafIndex",
-        type: "uint256",
+        type: "uint32",
       },
       {
         indexed: false,
@@ -143,9 +143,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "",
-        type: "uint256",
+        type: "uint64",
       },
     ],
     name: "currentNeighborRootIndex",
@@ -175,9 +175,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "",
-        type: "uint256",
+        type: "uint64",
       },
     ],
     name: "edgeExistsForChain",
@@ -194,17 +194,17 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "",
-        type: "uint256",
+        type: "uint64",
       },
     ],
     name: "edgeIndex",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "uint32",
         name: "",
-        type: "uint256",
+        type: "uint32",
       },
     ],
     stateMutability: "view",
@@ -221,9 +221,9 @@ const _abi = [
     name: "edgeList",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "chainID",
-        type: "uint256",
+        type: "uint64",
       },
       {
         internalType: "bytes32",
@@ -231,9 +231,9 @@ const _abi = [
         type: "bytes32",
       },
       {
-        internalType: "uint256",
+        internalType: "uint32",
         name: "latestLeafIndex",
-        type: "uint256",
+        type: "uint32",
       },
     ],
     stateMutability: "view",
@@ -291,9 +291,9 @@ const _abi = [
       {
         components: [
           {
-            internalType: "uint256",
+            internalType: "uint64",
             name: "chainID",
-            type: "uint256",
+            type: "uint64",
           },
           {
             internalType: "bytes32",
@@ -301,9 +301,9 @@ const _abi = [
             type: "bytes32",
           },
           {
-            internalType: "uint256",
+            internalType: "uint32",
             name: "latestLeafIndex",
-            type: "uint256",
+            type: "uint32",
           },
         ],
         internalType: "struct LinkableTree.Edge[]",
@@ -343,9 +343,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "_chainID",
-        type: "uint256",
+        type: "uint64",
       },
     ],
     name: "hasEdge",
@@ -404,9 +404,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "neighborChainID",
-        type: "uint256",
+        type: "uint64",
       },
       {
         internalType: "bytes32",
@@ -530,9 +530,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "",
-        type: "uint256",
+        type: "uint64",
       },
       {
         internalType: "uint32",
@@ -670,9 +670,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint64",
         name: "sourceChainID",
-        type: "uint256",
+        type: "uint64",
       },
       {
         internalType: "bytes32",
@@ -680,9 +680,9 @@ const _abi = [
         type: "bytes32",
       },
       {
-        internalType: "uint256",
+        internalType: "uint32",
         name: "leafIndex",
-        type: "uint256",
+        type: "uint32",
       },
     ],
     name: "updateEdge",

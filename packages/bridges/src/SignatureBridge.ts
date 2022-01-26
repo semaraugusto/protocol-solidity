@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { ZkComponents } from "@webb-tools/utils";
+import { getChainIdType, ZkComponents } from "@webb-tools/utils";
 import { PoseidonT3__factory } from "@webb-tools/contracts";
 import { MintableToken, GovernedTokenWrapper } from "@webb-tools/tokens";
 import { BridgeInput, DeployerConfig, IAnchor, IAnchorDeposit } from "@webb-tools/interfaces";
@@ -289,7 +289,7 @@ export class SignatureBridge {
   }
 
   public async deposit(destinationChainId: number, anchorSize: ethers.BigNumberish, signer: ethers.Signer) {
-    const chainId = await signer.getChainId();
+    const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const anchor = this.getAnchor(chainId, anchorSize);
     if (!anchor) {
@@ -326,7 +326,7 @@ export class SignatureBridge {
   }
 
   public async wrapAndDeposit(destinationChainId: number, tokenAddress: string, anchorSize: ethers.BigNumberish, signer: ethers.Signer) {
-    const chainId = await signer.getChainId();
+    const chainId = getChainIdType(await signer.getChainId());
     const signerAddress = await signer.getAddress();
     const anchor = this.getAnchor(chainId, anchorSize);
     if (!anchor) {
@@ -384,7 +384,7 @@ export class SignatureBridge {
     signer: ethers.Signer
   ) {
     // Construct the proof from the origin anchor
-    const anchorToProve = this.getAnchor(depositInfo.originChainId, anchorSize);
+    const anchorToProve = this.getAnchor(Number(depositInfo.originChainId), anchorSize);
     if (!anchorToProve) {
       throw new Error("Could not find anchor to prove against");
     }
@@ -415,7 +415,7 @@ export class SignatureBridge {
     signer: ethers.Signer
   ) {
     // Construct the proof from the origin anchor
-    const anchorToProve = this.getAnchor(depositInfo.originChainId, anchorSize);
+    const anchorToProve = this.getAnchor(Number(depositInfo.originChainId), anchorSize);
     if (!anchorToProve) {
       throw new Error("Could not find anchor to prove against");
     }

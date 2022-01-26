@@ -22,10 +22,10 @@ import {
 } from '../../typechain';
 
 // Convenience wrapper classes for contract classes
-import { Verifier } from '@webb-tools/bridges';
-import { Anchor } from '@webb-tools/anchors';
-import { MerkleTree } from '@webb-tools/merkle-tree';
-import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from '@webb-tools/utils';
+import { Verifier } from '../../packages/bridges/src';
+import { Anchor } from '../../packages/anchors/src';
+import { MerkleTree } from '../../packages/merkle-tree/src';
+import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from '../../packages/utils/src';
 
 const { NATIVE_AMOUNT } = process.env
 const snarkjs = require('snarkjs')
@@ -48,7 +48,7 @@ describe('Anchor for 2 max edges', () => {
   let token: Token;
   let wrappedToken: WrappedToken;
   let tokenDenomination = '1000000000000000000' // 1 ether
-  const chainID = 31337;
+  let chainID;
   const MAX_EDGES = 1;
   let createWitness: any;
 
@@ -98,6 +98,10 @@ describe('Anchor for 2 max edges', () => {
     // approve the anchor to spend the minted funds
     await token.approve(anchor.contract.address, '10000000000000000000000');
 
+    const CHAIN_TYPE = '0x0100';
+    const chainIdType = CHAIN_TYPE + toFixedHex((await sender.getChainId()), 4).substr(2);
+    chainID = BigInt(chainIdType);
+
     createWitness = async (data: any) => {
       const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/bridge/2/witness_calculator.js");
       const fileBuf = require('fs').readFileSync('./protocol-solidity-fixtures/fixtures/bridge/2/poseidon_bridge_2.wasm');
@@ -114,7 +118,7 @@ describe('Anchor for 2 max edges', () => {
     });
   })
 
-  describe ('Setting Handler/Verifier Address Negative Tests', () => {
+  describe('Setting Handler/Verifier Address Negative Tests', () => {
     it('should revert (setting handler) with improper nonce', async() => {
       const signers = await ethers.getSigners();
       await TruffleAssert.reverts(
@@ -435,7 +439,8 @@ describe('Anchor for 2 max edges', () => {
       const signers = await ethers.getSigners();
       const relayer = signers[0];
 
-      const deposit = Anchor.generateDeposit(chainID)
+      const chainIDType = await anchor.getChainIdType(chainID);
+      const deposit = Anchor.generateDeposit(chainIDType)
       await tree.insert(deposit.commitment)
       await anchor.contract.deposit(toFixedHex(deposit.commitment))
 
@@ -655,7 +660,7 @@ describe('Anchor for 2 max edges', () => {
 
       // create a deposit on the anchor already setup
       const { deposit, index } = await anchor.deposit();
-      const refreshedDestId = await wallet.getChainId();
+      const refreshedDestId = await anchor.getChainIdType();
       const refreshedDeposit = Anchor.generateDeposit(refreshedDestId);
 
       const { merkleRoot, pathElements, pathIndices } = anchor.tree.path(0);
@@ -810,7 +815,7 @@ describe('Anchor for 2 max edges', () => {
       const balUnwrappedTokenBeforeWithdrawSender = await token.balanceOf(sender.address);
 
       const newAnchor = await Anchor.connect(wrappedAnchor.contract.address, zkComponents, wallet);
-      await TruffleAssert.passes(newAnchor.withdrawAndUnwrap(deposit, 31337, index, sender.address, signers[1].address, bigInt(0), bigInt(0), token.address));
+      await TruffleAssert.passes(newAnchor.withdrawAndUnwrap(deposit, BigInt(chainID), index, sender.address, signers[1].address, bigInt(0), bigInt(0), token.address));
       const balWrappedTokenAfterWithdrawAnchor = await wrappedToken.balanceOf(wrappedAnchor.contract.address);
       assert.strictEqual(balWrappedTokenAfterWithdrawAnchor.toString(), '0');
 
@@ -856,13 +861,13 @@ describe('Anchor for 2 max edges', () => {
       const amountToWrap = BigNumber.from(tokenDenomination).mul(100).div(100 - wrapFee);
       const amountToWrap2 = BigNumber.from(tokenDenomination);
       await TruffleAssert.reverts(
-        wrappedAnchor.deposit(31337),
+        wrappedAnchor.deposit(chainID),
         'ERC20: transfer amount exceeds balance'
       );
 
       await wrappedAnchor.contract.wrapToken(token.address, amountToWrap);
       await TruffleAssert.passes(
-        wrappedAnchor.deposit(31337)
+        wrappedAnchor.deposit(chainID)
       )
     });
 

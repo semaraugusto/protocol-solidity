@@ -1,7 +1,7 @@
 export interface IAnchorDepositInfo {
-  chainID: BigInt;
-  secret: BigInt;
-  nullifier: BigInt;
+  chainID: bigint;
+  secret: bigint;
+  nullifier: bigint;
   commitment: string;
   nullifierHash: string;
 };
@@ -9,7 +9,7 @@ export interface IAnchorDepositInfo {
 export interface IAnchorDeposit {
   deposit: IAnchorDepositInfo;
   index: number;
-  originChainId: number;
+  originChainId: bigint;
 };
 
 export interface IFixedAnchorPublicInputs {

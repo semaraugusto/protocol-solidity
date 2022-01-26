@@ -8,14 +8,11 @@ import { ethers } from 'hardhat';
 const TruffleAssert = require('truffle-assertions');
 
 // Convenience wrapper classes for contract classes
-import { Verifier } from '@webb-tools/bridges';
-import { Anchor, AnchorHandler } from '@webb-tools/anchors';
-import { BridgeSide } from '../../packages/bridges/src/BridgeSide'
-import { MintableToken } from '@webb-tools/tokens';
-import { fetchComponentsFromFilePaths, ZkComponents } from '@webb-tools/utils';
+import { Verifier, BridgeSide } from '../../packages/bridges/src';
+import { Anchor, AnchorHandler } from '../../packages/anchors/src';
+import { MintableToken, GovernedTokenWrapper, TokenWrapperHandler } from '../../packages/tokens/src';
+import { fetchComponentsFromFilePaths, ZkComponents } from '../../packages/utils/src';
 import { PoseidonT3__factory } from '../../typechain';
-import { GovernedTokenWrapper } from '../../packages/tokens/src/GovernedTokenWrapper';
-import { TokenWrapperHandler } from '../../packages/tokens/src/TokenWrapperHandler';
 
 describe('BridgeSideConstruction', () => {
 

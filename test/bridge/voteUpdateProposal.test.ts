@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later-only
  */
 
+import { getChainIdType } from "@webb-tools/utils";
 import { artifacts, assert, contract } from "hardhat";
 import { toBN } from "web3-utils";
 const TruffleAssert = require('truffle-assertions');
@@ -23,8 +24,8 @@ const Verifier6 = artifacts.require('Verifier6');
 const Token = artifacts.require("ERC20Mock");
 
 contract('Bridge - [voteUpdateProposal with relayerThreshold == 3]', async (accounts) => {
-  const originChainID = 1;
-  const destinationChainID = 2;
+  const originChainID = getChainIdType(1);
+  const destinationChainID = getChainIdType(2);
   const relayer1Address = accounts[0];
   const relayer2Address = accounts[1];
   const relayer3Address = accounts[2];

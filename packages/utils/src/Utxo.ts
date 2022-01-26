@@ -1,5 +1,5 @@
 import { BigNumberish, ethers } from 'ethers';
-import { randomBN, poseidonHash, toBuffer } from './utils';
+import { randomBN, poseidonHash, toBuffer, toHex } from './utils';
 import { Keypair } from './Keypair';
 import { RootInfo } from './types';
 
@@ -30,7 +30,7 @@ export class Utxo {
     amount = BigNumber.from(0),
     keypair = new Keypair(),
     blinding = randomBN(),
-    originChainId = BigNumber.from(31337),
+    originChainId = BigNumber.from(BigInt(`0x0100${toHex('31337', 4)}`)),
     index = null
   } = {}) {
     this.chainId = BigNumber.from(chainId);

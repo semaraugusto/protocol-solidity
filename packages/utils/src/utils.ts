@@ -98,3 +98,9 @@ export function getExtDataHash({
   const hash = ethers.utils.keccak256(encodedData)
   return BigNumber.from(hash).mod(FIELD_SIZE)
 }
+
+export const getChainIdType = (chainId: number): number => {
+  const CHAIN_TYPE = '0x0100';
+  const chainIdType = CHAIN_TYPE + toFixedHex(chainId, 4).substr(2);
+  return Number(BigInt(chainIdType));
+}

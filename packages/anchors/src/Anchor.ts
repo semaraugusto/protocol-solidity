@@ -50,6 +50,13 @@ class Anchor implements IAnchor {
     this.depositHistory = {};
     this.zkComponents = zkComponents;
   }
+
+  public async getChainIdType(value?: number): Promise<bigint> {
+    const CHAIN_TYPE = '0x0100';
+    const chainID = await this.signer.getChainId();
+    const chainIdType = CHAIN_TYPE + toFixedHex((value) ? value : chainID, 4).substr(2);
+    return BigInt(chainIdType);
+  }
   
   getAddress(): string {
     return this.contract.address;
@@ -114,7 +121,7 @@ class Anchor implements IAnchor {
     return createdAnchor;
   }
 
-  public static generateDeposit(destinationChainId: number, secretBytesLen: number = 31, nullifierBytesLen: number = 31): IAnchorDepositInfo {
+  public static generateDeposit(destinationChainId: number | bigint, secretBytesLen: number = 31, nullifierBytesLen: number = 31): IAnchorDepositInfo {
     const chainID = BigInt(destinationChainId);
     const secret = rbigint(secretBytesLen);
     const nullifier = rbigint(nullifierBytesLen);
@@ -182,10 +189,10 @@ class Anchor implements IAnchor {
   }
 
   public async createResourceId(): Promise<string> {
+    const chainIDType = await this.getChainIdType();
     return toHex(
       this.contract.address
-        + toHex(1, 2).substr(2)
-        + toHex((await this.signer.getChainId()), 4).substr(2),
+        + toHex(chainIDType, 6).substr(2),
       32
     );
   }
@@ -210,7 +217,6 @@ class Anchor implements IAnchor {
   // Proposal data is used to update linkedAnchors via bridge proposals 
   // on other chains with this anchor's state
   public async getProposalData(resourceID: string, leafIndex?: number): Promise<string> {
-
     // If no leaf index passed in, set it to the most recent one.
     if (!leafIndex) {
       leafIndex = this.tree.number_of_elements() - 1;
@@ -218,14 +224,14 @@ class Anchor implements IAnchor {
 
     const functionSig = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("updateEdge(uint256,bytes32,uint256)")).slice(0, 10).padEnd(10, '0');
     const dummyNonce = 1;
-    const chainID = await this.signer.getChainId();
+    const chainID = await this.getChainIdType();
     const merkleRoot = this.depositHistory[leafIndex];
 
     return '0x' +
       toHex(resourceID, 32).substr(2)+ 
       functionSig.slice(2) + 
       toHex(dummyNonce,4).substr(2) +
-      toHex(chainID, 4).substr(2) + 
+      toHex(chainID, 6).substr(2) + 
       toHex(leafIndex, 4).substr(2) + 
       toHex(merkleRoot, 32).substr(2);
   }
@@ -234,7 +240,6 @@ class Anchor implements IAnchor {
     const resourceID = await this.createResourceId();
     const functionSig = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("setHandler(address,uint32)")).slice(0, 10).padEnd(10, '0');  
     const nonce = (await this.contract.getProposalNonce()) + 1;;
-    const chainID = await this.signer.getChainId();
 
     return '0x' +
       toHex(resourceID, 32).substr(2)+ 
@@ -250,10 +255,11 @@ class Anchor implements IAnchor {
    * @returns 
    */
   public async deposit(destinationChainId?: number): Promise<IAnchorDeposit> {
-    const originChainId = await this.signer.getChainId();
+    const originChainId = await this.getChainIdType();
     const destChainId = (destinationChainId) ? destinationChainId : originChainId;
-    const deposit = Anchor.generateDeposit(destChainId);
-    
+    // console.log('Generating deposit for chain:', destChainId);
+    const deposit = Anchor.generateDeposit(Number(destChainId));
+    // console.log('Depositing with:', deposit);
     const tx = await this.contract.deposit(toFixedHex(deposit.commitment), { gasLimit: '0x5B8D80' });
     const receipt = await tx.wait();
 
@@ -262,14 +268,14 @@ class Anchor implements IAnchor {
     this.depositHistory[index] = await this.contract.getLastRoot();
 
     const root = await this.contract.getLastRoot();
-
+    // console.log('Roots', ethers.BigNumber.from(this.tree.root()).toHexString(), root.toString());
     return { deposit, index, originChainId };
   }
 
   public async wrapAndDeposit(tokenAddress: string, destinationChainId?: number): Promise<IAnchorDeposit> {
-    const originChainId = await this.signer.getChainId();
+    const originChainId = await this.getChainIdType();
     const chainId = (destinationChainId) ? destinationChainId : originChainId;
-    const deposit = Anchor.generateDeposit(chainId);
+    const deposit = Anchor.generateDeposit(Number(chainId));
     let tx;
     if (checkNativeAddress(tokenAddress)) {
       tx = await this.contract.wrapAndDeposit(tokenAddress, toFixedHex(deposit.commitment), {
@@ -317,7 +323,7 @@ class Anchor implements IAnchor {
 
   public async generateWitnessInput(
     deposit: IAnchorDepositInfo,
-    originChain: number,
+    originChain: bigint,
     refreshCommitment: string | number,
     recipient: BigInt,
     relayer: BigInt,
@@ -329,12 +335,12 @@ class Anchor implements IAnchor {
   ): Promise<any> {
     const { chainID, nullifierHash, nullifier, secret } = deposit;
     let rootDiffIndex: number;
-    // read the origin chain's index into the roots array
     if (chainID == BigInt(originChain)) {
+    // read the origin chain's index into the roots array
       rootDiffIndex = 0;
     } else {
       const edgeIndex = await this.contract.edgeIndex(originChain);
-      rootDiffIndex = edgeIndex.toNumber() + 1;
+      rootDiffIndex = edgeIndex + 1;
     }
     
     return {
@@ -369,7 +375,7 @@ class Anchor implements IAnchor {
 
     const vKey = await snarkjs.zKey.exportVerificationKey(this.zkComponents.zkey);
     res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
-
+    // console.log('Verifies', res);
     let proofEncoded = await Anchor.generateWithdrawProofCallData(proof, publicSignals);
     return proofEncoded;
   }
@@ -386,7 +392,7 @@ class Anchor implements IAnchor {
     await this.checkKnownRoot();
 
     const { merkleRoot, pathElements, pathIndices } = await this.tree.path(index);
-    const chainId = await this.signer.getChainId();
+    const chainId = await this.getChainIdType();
 
     const roots = await this.populateRootsForProof();
 
@@ -463,7 +469,7 @@ class Anchor implements IAnchor {
 
   public async withdrawAndUnwrap(
     deposit: IAnchorDepositInfo,
-    originChainId: number,
+    originChainId: bigint,
     index: number,
     recipient: string,
     relayer: string,

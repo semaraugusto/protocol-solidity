@@ -8,17 +8,18 @@ import { ethers } from 'hardhat';
 const path = require('path');
 
 // Convenience wrapper classes for contract classes
-import { Bridge } from '@webb-tools/bridges'
-import { Anchor } from '@webb-tools/anchors';
-import { fetchComponentsFromFilePaths, ZkComponents } from '@webb-tools/utils';
-import { GovernedTokenWrapper } from '@webb-tools/tokens';
+import { Bridge } from '../../packages/bridges/src';
+import { Anchor } from '../../packages/anchors/src';
+import { fetchComponentsFromFilePaths, getChainIdType, ZkComponents } from '../../packages/utils/src';
+import { GovernedTokenWrapper } from '../../packages/tokens/src';
 import { startGanacheServer } from '../helpers/startGanacheServer';
-import { BridgeInput } from '@webb-tools/interfaces';
+import { BridgeInput } from '../../packages/interfaces/src';
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe('multichain tests for native', () => {
-
+  const chainID1 = getChainIdType(31337);
+  const chainID2 = getChainIdType(1337);
   // setup ganache networks
   let ganacheServer2: any;
   let zkComponents: ZkComponents;
@@ -45,25 +46,25 @@ describe('multichain tests for native', () => {
       bridge2WebbEthInput = {
         anchorInputs: {
           asset: {
-            31337: ['0'],
-            1337: ['0x0000000000000000000000000000000000000000'],
+            [chainID1]: ['0'],
+            [chainID2]: ['0x0000000000000000000000000000000000000000'],
           },
           anchorSizes: ['1000000000000000000', '100000000000000000000', '10000000000000000000000'],
         },
-        chainIDs: [31337, 1337]
+        chainIDs: [chainID1, chainID2]
       };
 
       const signers = await ethers.getSigners();
 
       const deploymentConfig = {
-        31337: signers[1],
-        1337: ganacheWallet2,
+        [chainID1]: signers[1],
+        [chainID2]: ganacheWallet2,
       };
       const bridge = await Bridge.deployFixedDepositBridge(bridge2WebbEthInput, deploymentConfig, zkComponents);
 
       // Should be able to retrieve individual anchors
-      const chainId1 = 31337;
-      const chainId2 = 1337;
+      const chainId1 = chainID1;
+      const chainId2 = chainID2;
       const anchorSize = '1000000000000000000';
       const anchor1: Anchor = bridge.getAnchor(chainId1, anchorSize)! as Anchor;
       const anchor2: Anchor = bridge.getAnchor(chainId2, anchorSize)! as Anchor;
