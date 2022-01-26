@@ -9,11 +9,11 @@ import { ethers, network } from 'hardhat';
 const path = require('path');
 
 // Convenience wrapper classes for contract classes
-import { Anchor } from 'packages/anchors/src';
-import { SignatureBridge } from 'packages/bridges/src';
-import { BridgeInput } from 'packages/interfaces/src';
-import { MintableToken } from 'packages/tokens/src';
-import { fetchComponentsFromFilePaths, getChainIdType, ZkComponents } from 'packages/utils/src';
+import { Anchor } from '../../packages/anchors/src';
+import { SignatureBridge } from '../../packages/bridges/src';
+import { BridgeInput } from '../../packages/interfaces/src';
+import { MintableToken } from '../../packages/tokens/src';
+import { fetchComponentsFromFilePaths, getChainIdType, ZkComponents } from '../../packages/utils/src';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Signer } from 'ethers';
 import { startGanacheServer } from '../helpers/startGanacheServer';
