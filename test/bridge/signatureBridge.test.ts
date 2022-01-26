@@ -14,8 +14,7 @@ import { SignatureBridge } from '../../packages/bridges/src';
 import { BridgeInput } from '../../packages/interfaces/src';
 import { MintableToken } from '../../packages/tokens/src';
 import { fetchComponentsFromFilePaths, getChainIdType, ZkComponents } from '../../packages/utils/src';
-import { BigNumber } from '@ethersproject/bignumber';
-import { Signer } from 'ethers';
+import { Signer, BigNumber } from 'ethers';
 import { startGanacheServer } from '../helpers/startGanacheServer';
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -86,7 +85,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       await tokenInstance1.mintTokens(signers[1].address, '100000000000000000000000000');
     });
 
-    it('create 2 side bridge for one token', async () => {
+    it.only('create 2 side bridge for one token', async () => {
 
       bridge2WebbEthInput = {
         anchorInputs: {
@@ -144,7 +143,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       assert.deepEqual(webbTokenBalance2, ethers.BigNumber.from(anchorSize));
     });
 
-    it('create 3 side bridge for one token', async () => {
+    it.only('create 3 side bridge for one token', async () => {
       bridge3WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -201,7 +200,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       assert.deepStrictEqual(destAnchorEdge2After.root, destAnchorEdge3After.root);
     }).timeout(40000);
 
-    it('create 2 side bridge for multiple tokens', async () => {
+    it.only('create 2 side bridge for multiple tokens', async () => {
       bridge2WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -214,7 +213,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       };
     });
 
-    it('create 2 side bridge for native and erc20 token', async () => {
+    it.only('create 2 side bridge for native and erc20 token', async () => {
       bridge2WebbEthInput = {
         anchorInputs: {
           asset: {
@@ -282,7 +281,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
     })
 
     describe('#bridging', () => {
-      it('should withdraw successfully from latest deposit', async () => {
+      it.only('should withdraw successfully from latest deposit', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -320,7 +319,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         assert.deepEqual(endingBalanceDest, startingBalanceDest.add(anchorSize));
       })
 
-      it('should withdraw on hardhat from ganache deposit', async () => {
+      it.only('should withdraw on hardhat from ganache deposit', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -346,7 +345,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         assert.deepStrictEqual(endingBalanceDest, startingBalanceDest.add(anchorSize));
       })
 
-      it('should update multiple deposits and withdraw historic deposit', async () => {
+      it.only('should update multiple deposits and withdraw historic deposit', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -373,7 +372,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
         assert.deepStrictEqual(endingBalanceDest, startingBalanceDest.add(anchorSize));
       });
 
-      it('should update multiple deposits and withdraw historic deposit from ganache', async () => {
+      it.only('should update multiple deposits and withdraw historic deposit from ganache', async () => {
         // Fetch information about the anchor to be updated.
         const signers = await ethers.getSigners();
         const anchorSize = '1000000000000000000';
@@ -480,7 +479,7 @@ describe('SignatureBridge - [multichain tests for erc20 bridges]', () => {
       }
     })
 
-    it('should withdraw successfully from latest deposits on all chains', async () => {
+    it.only('should withdraw successfully from latest deposits on all chains', async () => {
       const signers = await ethers.getSigners();
 
       // make deposits so edges exists

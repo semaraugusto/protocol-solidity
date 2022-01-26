@@ -15,6 +15,7 @@ export interface IAnchor {
   token?: string;
   denomination?: string;
 
+  getChainIdType(value?: number): Promise<bigint>;
   setSigner(signer: ethers.Signer);
   getProposalData(resourceID: string, leafIndex?: number): Promise<string>;
   getHandlerProposalData(newHandler: string): Promise<string>;

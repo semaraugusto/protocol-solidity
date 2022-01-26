@@ -107,6 +107,7 @@ export class SignatureBridge {
     
 
     for (let chainID of bridgeInput.chainIDs) {
+      console.log(chainID);
       const adminAddress = await deployers[chainID].getAddress();
 
       // Create the bridgeSide
@@ -247,8 +248,8 @@ export class SignatureBridge {
     for (let anchor of anchorsToUpdate) {
       // get the bridge side which corresponds to this anchor
       const resourceID = await anchor.createResourceId();
-      const chainId = await anchor.signer.getChainId();
-      const bridgeSide = this.bridgeSides.get(chainId);
+      const chainId = await anchor.getChainIdType();
+      const bridgeSide = this.bridgeSides.get(Number(chainId));
       await bridgeSide!.executeAnchorProposalWithSig(srcAnchor, resourceID);
     }
   };
