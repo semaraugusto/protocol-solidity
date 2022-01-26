@@ -21,10 +21,10 @@ import {
 } from '../../typechain';
 
 // Convenience wrapper classes for contract classes
-import { Verifier } from 'packages/bridges/src';
-import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex } from 'packages/utils/src';
-import { Anchor, AnchorProxy } from 'packages/anchors/src';
-import { MerkleTree } from 'packages/merkle-tree/src';
+import { Verifier } from '../../packages/bridges/src';
+import { fetchComponentsFromFilePaths, ZkComponents, toFixedHex, getChainIdType } from '../../packages/utils/src';
+import { Anchor, AnchorProxy } from '../../packages/anchors/src';
+import { MerkleTree } from '../../packages/merkle-tree/src';
 
 const { NATIVE_AMOUNT } = process.env
 const snarkjs = require('snarkjs')
@@ -126,7 +126,7 @@ describe('AnchorProxy', () => {
     await token.approve(anchorProxy.contract.address, '10000000000000000000000');
 
     const CHAIN_TYPE = '0x0100';
-    const chainIdType = CHAIN_TYPE + toFixedHex((value) ? value : (await sender.getChainId()), 4).substr(2);
+    const chainIdType = CHAIN_TYPE + toFixedHex(await sender.getChainId(), 4).substr(2);
     chainID = BigInt(chainIdType);
 
     createWitness = async (data: any) => {
