@@ -20,11 +20,17 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface VAnchorEncodeInputsInterface extends ethers.utils.Interface {
   functions: {
+    "EVM_CHAIN_ID_TYPE()": FunctionFragment;
     "_encodeInputs16((bytes,bytes,bytes32[],bytes32[2],uint256,bytes32),uint8)": FunctionFragment;
     "_encodeInputs2((bytes,bytes,bytes32[],bytes32[2],uint256,bytes32),uint8)": FunctionFragment;
+    "getChainIDType()": FunctionFragment;
     "getChainId()": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "EVM_CHAIN_ID_TYPE",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "_encodeInputs16",
     values: [
@@ -52,6 +58,10 @@ interface VAnchorEncodeInputsInterface extends ethers.utils.Interface {
       },
       BigNumberish
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getChainIDType",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getChainId",
@@ -59,11 +69,19 @@ interface VAnchorEncodeInputsInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "EVM_CHAIN_ID_TYPE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "_encodeInputs16",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "_encodeInputs2",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getChainIDType",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getChainId", data: BytesLike): Result;
@@ -115,6 +133,8 @@ export class VAnchorEncodeInputs extends BaseContract {
   interface: VAnchorEncodeInputsInterface;
 
   functions: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<[string]>;
+
     _encodeInputs16(
       _args: {
         proof: BytesLike;
@@ -141,8 +161,12 @@ export class VAnchorEncodeInputs extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string, string[]]>;
 
+    getChainIDType(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     getChainId(overrides?: CallOverrides): Promise<[BigNumber]>;
   };
+
+  EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<string>;
 
   _encodeInputs16(
     _args: {
@@ -170,9 +194,13 @@ export class VAnchorEncodeInputs extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[string, string[]]>;
 
+  getChainIDType(overrides?: CallOverrides): Promise<BigNumber>;
+
   getChainId(overrides?: CallOverrides): Promise<BigNumber>;
 
   callStatic: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<string>;
+
     _encodeInputs16(
       _args: {
         proof: BytesLike;
@@ -198,6 +226,8 @@ export class VAnchorEncodeInputs extends BaseContract {
       maxEdges: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string, string[]]>;
+
+    getChainIDType(overrides?: CallOverrides): Promise<BigNumber>;
 
     getChainId(overrides?: CallOverrides): Promise<BigNumber>;
   };
@@ -205,6 +235,8 @@ export class VAnchorEncodeInputs extends BaseContract {
   filters: {};
 
   estimateGas: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<BigNumber>;
+
     _encodeInputs16(
       _args: {
         proof: BytesLike;
@@ -230,11 +262,15 @@ export class VAnchorEncodeInputs extends BaseContract {
       maxEdges: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getChainIDType(overrides?: CallOverrides): Promise<BigNumber>;
 
     getChainId(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
+    EVM_CHAIN_ID_TYPE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     _encodeInputs16(
       _args: {
         proof: BytesLike;
@@ -260,6 +296,8 @@ export class VAnchorEncodeInputs extends BaseContract {
       maxEdges: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    getChainIDType(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getChainId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
