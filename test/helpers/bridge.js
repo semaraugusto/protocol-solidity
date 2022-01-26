@@ -77,8 +77,8 @@ const createUpdateProposalData = (sourceChainID, leafIndex, merkleRoot, thisAnch
     toHex(resourceID, 32).substr(2)+ 
     functionSig.slice(2) + 
     toHex(dummyNonce,4).substr(2) +
-    // chainID (32 bytes)
-    toHex(sourceChainID, 4).substr(2) +
+    // chainID (6 bytes)
+    toHex(sourceChainID, 6).substr(2) +
     // latest leaf index causing the incoming root 
     toHex(leafIndex, 4).substr(2) +
     // Updated Merkle Root (32 bytes)
@@ -101,7 +101,7 @@ const advanceBlock = () => {
 }
 
 const createResourceID = (contractAddress, chainID) => {
-  return toHex(contractAddress + toHex(chainID, 4).substr(2), 32)
+  return toHex(contractAddress + toHex(chainID, 6).substr(2), 32)
 };
 
 const assertObjectsMatch = (expectedObj, actualObj) => {

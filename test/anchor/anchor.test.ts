@@ -435,17 +435,16 @@ describe('Anchor for 2 max edges', () => {
       );
     });
 
-    it('should reject with tampered public inputs', async () => {
+    it.only('should reject with tampered public inputs', async () => {
       const signers = await ethers.getSigners();
       const relayer = signers[0];
-
-      const chainIDType = await anchor.getChainIdType(chainID);
-      const deposit = Anchor.generateDeposit(chainIDType)
+      
+      const deposit = Anchor.generateDeposit(chainID)
       await tree.insert(deposit.commitment)
       await anchor.contract.deposit(toFixedHex(deposit.commitment))
 
-      let { merkleRoot, pathElements, pathIndices } = await tree.path(0)
-
+      let { merkleRoot, pathElements, pathIndices } = await tree.path(0) 
+      
       const input = {
         // public
         nullifierHash: deposit.nullifierHash,

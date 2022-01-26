@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later-only
  */
 
-import { getChainIdType } from "@webb-tools/utils";
+import { getChainIdType } from "../../packages/utils/src";
 import { artifacts, assert, contract } from "hardhat";
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
