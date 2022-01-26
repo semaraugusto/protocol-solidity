@@ -117,8 +117,6 @@ export class VBridge {
       // Create the bridgeSide
       vBridgeInstance = await SignatureBridgeSide.createBridgeSide(
         adminAddress,
-        0,
-        100,
         deployers[chainID],
       );
 

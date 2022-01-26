@@ -110,8 +110,6 @@ export class SignatureBridge {
       // Create the bridgeSide
       const bridgeInstance = await SignatureBridgeSide.createBridgeSide(
         adminAddress,
-        0,
-        100,
         deployers[chainID],
       );
 
