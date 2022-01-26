@@ -8,12 +8,12 @@
  const TruffleAssert = require('truffle-assertions');
  
  // Convenience wrapper classes for contract classes
- import { Verifier, SignatureBridgeSide } from 'packages/bridges/src';
- import { Anchor, AnchorHandler } from 'packages/anchors/src';
- import { MintableToken } from 'packages/tokens/src';
- import { fetchComponentsFromFilePaths, ZkComponents } from 'packages/utils/src';
- import { PoseidonT3__factory } from 'packages/contracts/src';
- import { GovernedTokenWrapper, TokenWrapperHandler } from 'packages/tokens/src';
+ import { Verifier, SignatureBridgeSide } from '../../packages/bridges/src';
+ import { Anchor, AnchorHandler } from '../../packages/anchors/src';
+ import { MintableToken } from '../../packages/tokens/src';
+ import { fetchComponentsFromFilePaths, ZkComponents } from '../../packages/utils/src';
+ import { PoseidonT3__factory } from '../../packages/contracts/src';
+ import { GovernedTokenWrapper, TokenWrapperHandler } from '../../packages/tokens/src';
  
  describe('SignatureBridgeSideConstruction', () => {
  

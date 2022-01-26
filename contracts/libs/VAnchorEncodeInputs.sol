@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 library VAnchorEncodeInputs {
+  bytes2 public constant EVM_CHAIN_ID_TYPE = 0x0100;
+
   struct Proof {
     bytes proof;
     bytes roots;
@@ -17,6 +19,19 @@ library VAnchorEncodeInputs {
     uint chainId;
     assembly { chainId := chainid() }
     return chainId;
+  }
+
+  function getChainIDType() public view returns (uint) {
+    // The chain ID and type pair is 6 bytes in length
+    // The first 2 bytes are reserved for the chain type.
+    // The last 4 bytes are reserved for a u32 (uint32) chain ID.
+    bytes4 chainID = bytes4(uint32(getChainId()));
+    bytes2 chainType = EVM_CHAIN_ID_TYPE;
+    // We encode the chain ID and type pair into packed bytes which
+    // should be 6 bytes using the encode packed method. We will
+    // cast this as a bytes32 in order to encode as a uint256 for zkp verification.
+    bytes memory chainIdWithType = abi.encodePacked(chainType, chainID);
+    return uint(uint48(bytes6(chainIdWithType)));
   }
 
   function _encodeInputs2(

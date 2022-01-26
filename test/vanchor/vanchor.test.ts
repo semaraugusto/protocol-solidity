@@ -12,7 +12,7 @@ import {
   GovernedTokenWrapper as WrappedToken,
   GovernedTokenWrapper__factory as WrappedTokenFactory,
   PoseidonT3__factory
-} from 'packages/contracts';
+} from '../../packages/contracts';
 
 // These contracts are not included in the package, so can use generated typechain
 import {
@@ -21,14 +21,14 @@ import {
 } from '../../typechain';
 
 // Convenience wrapper classes for contract classes
-import { getChainIdType, toFixedHex } from 'packages/utils/src';
+import { getChainIdType, toFixedHex } from '../../packages/utils/src';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
-import { MerkleTree } from 'packages/merkle-tree/src';
-import { Utxo, poseidonHash, poseidonHash2 } from 'packages/utils/src';
-import { VAnchor } from 'packages/anchors/src';
-import { Verifier } from 'packages/vbridge/src';
+import { MerkleTree } from '../../packages/merkle-tree/src';
+import { Utxo, poseidonHash, poseidonHash2 } from '../../packages/utils/src';
+import { VAnchor } from '../../packages/anchors/src';
+import { Verifier } from '../../packages/vbridge/src';
 
 const { NATIVE_AMOUNT } = process.env
 const BN = require('bn.js');

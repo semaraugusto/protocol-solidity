@@ -10,6 +10,23 @@
 
 ## Methods
 
+### EVM_CHAIN_ID_TYPE
+
+```solidity
+function EVM_CHAIN_ID_TYPE() external view returns (bytes2)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes2 | undefined
+
 ### _encodeInputs16
 
 ```solidity
@@ -57,6 +74,23 @@ function _encodeInputs2(VAnchorEncodeInputs.Proof _args, uint8 maxEdges) externa
 |---|---|---|
 | _0 | bytes | undefined
 | _1 | bytes32[] | undefined
+
+### getChainIDType
+
+```solidity
+function getChainIDType() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined
 
 ### getChainId
 
