@@ -5,6 +5,11 @@ pragma experimental ABIEncoderV2;
 
 library VAnchorEncodeInputs {
   bytes2 public constant EVM_CHAIN_ID_TYPE = 0x0100;
+  uint256 public constant BYTE_SIZE_MAX_EDGE_1 = 32*9;
+  uint256 public constant SNARK_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+  event PartialSuccess(string info);
+  event DataValue(bytes data);
+  event ChainId(uint256 chainId);
 
   struct Proof {
     bytes proof;
@@ -37,10 +42,13 @@ library VAnchorEncodeInputs {
   function _encodeInputs2(
     Proof memory _args,
     uint8 maxEdges
-  ) public view returns (bytes memory, bytes32[] memory) {
+    ) public view returns (bytes memory, bytes32[] memory, uint256, bytes memory) {
+
     uint256 _chainId = getChainIdType();
     bytes32[] memory result = new bytes32[](maxEdges + 1);
     bytes memory encodedInput;
+    uint256 argsHash;
+    bytes memory data = new bytes(32*9);
 
     if (maxEdges == 1) {
       uint256[9] memory inputs;
@@ -59,6 +67,50 @@ library VAnchorEncodeInputs {
       inputs[7] = uint256(roots[0]);
       inputs[8] = uint256(roots[1]);
       encodedInput = abi.encodePacked(inputs);
+      {
+      uint256 i0;
+      uint256 i1;
+      i0 = uint256(_args.publicAmount);
+      i1 = uint256(_args.extDataHash);
+      assembly {
+        mstore(add(data, 0x40), i1)
+        mstore(add(data, 0x20), i0)
+      }
+      }
+      {
+      uint256 i2;
+      uint256 i3;
+      i2 = uint256(_args.inputNullifiers[0]);
+      i3 = uint256(_args.inputNullifiers[1]);
+      assembly {
+        mstore(add(data, 0x80), i3)
+        mstore(add(data, 0x60), i2)
+      }
+      }
+      {
+      uint256 i4;
+      uint256 i5;
+      i4 = uint256(_args.outputCommitments[0]);
+      i5 = uint256(_args.outputCommitments[1]);
+      assembly {
+        mstore(add(data, 0xc0), i5)
+        mstore(add(data, 0xa0), i4)
+      }
+      }
+      {
+      uint256 i6;
+      uint256 i7;
+      uint256 i8;
+      i6 = uint256(_chainId);
+      i7 = uint256(roots[0]);
+      i8 = uint256(roots[1]);
+      assembly {
+        mstore(add(data, 0x120), i8)
+        mstore(add(data, 0x100), i7)
+        mstore(add(data, 0xe0), i6)
+      }
+      }
+      argsHash = uint256(sha256(data)) % SNARK_FIELD;
     } else if (maxEdges == 2) {
       uint256[10] memory inputs;
       bytes32[3] memory roots = abi.decode(_args.roots, (bytes32[3]));
@@ -151,7 +203,7 @@ library VAnchorEncodeInputs {
       require(false, "Invalid edges");
     }
 
-    return (encodedInput, result);
+    return (encodedInput, result, argsHash, data);
   }
 
 

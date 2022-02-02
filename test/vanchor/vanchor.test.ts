@@ -245,6 +245,24 @@ describe('VAnchor for 2 max edges', () => {
         [aliceDepositUtxo]
       );
     })
+    it('should test_call', async () => {
+      // Alice deposits into tornado pool
+      const aliceDepositAmount = 1e7;
+      const aliceDepositUtxo = new Utxo({
+        chainId: BigNumber.from(chainID),
+        originChainId: BigNumber.from(chainID),
+        amount: BigNumber.from(aliceDepositAmount)
+      });
+      
+      let out = await anchor.test_call(
+        sender.address,
+        aliceDepositUtxo.keypair.address(),
+        [],
+        [aliceDepositUtxo]
+      );
+      // console.log(out);
+      // console.log(hashedInput);
+    })
 
     it('should process fee on deposit', async () => {
       const signers = await ethers.getSigners();

@@ -4,6 +4,8 @@ import { p256, toHex, RootInfo, Keypair, FIELD_SIZE, getExtDataHash, toFixedHex,
 import { IAnchorDeposit, IAnchor, IExtData, IMerkleProofData, IUTXOInput, IVariableAnchorPublicInputs, IWitnessInput } from '@webb-tools/interfaces';
 import { MerkleTree } from '@webb-tools/merkle-tree';
 
+const jsSHA = require('jssha')
+
 const snarkjs = require('snarkjs');
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -13,6 +15,32 @@ function checkNativeAddress(tokenAddress: string): boolean {
   }
   return false;
 }
+
+const toBuffer = (value, length) =>
+  Buffer.from(
+    ethers.BigNumber.from(value)
+      .toHexString()
+      .slice(2)
+      .padStart(length * 2, '0'),
+    'hex',
+  )
+
+const toByteArray = (value, length) =>
+    value.slice(2)
+        .padStart(length * 2, '0')
+
+const Buffer2Hex = (number, length = 32) =>
+  '0x' +
+  (number instanceof Buffer
+    ? number.toString('hex')
+    : ethers.BigNumber.from(number).toHexString().slice(2)
+  ).padStart(length * 2, '0')
+
+// const toFixedHex = (number, length = 32) =>
+//   '0x' + number.slice(2).padStart(length*2, '0');
+
+const toFixedSizeString = (number, length = 32) =>
+  '0x' + number.padStart(length*2, '0');
 
 // This convenience wrapper class is used in tests -
 // It represents a deployed contract throughout its life (e.g. maintains merkle tree state)
@@ -546,6 +574,8 @@ export class VAnchor implements IAnchor {
     return {
       extData,
       publicInputs,
+      roots,
+      chainId,
     };
   }
 
@@ -803,6 +833,129 @@ export class VAnchor implements IAnchor {
     }
     const receipt = await tx.wait();
     return receipt;
+  }
+  public async test_call(
+    owner: string,
+    publicKey: string,
+    inputs: Utxo[] = [],
+    outputs: Utxo[] = [],
+    fee: BigNumberish = 0,
+    recipient: string = '0',
+    relayer: string = '0',
+    merkleProofsForInputs: any[] = []
+  ) {
+    while (inputs.length !== 2 && inputs.length < 16) {
+      inputs.push(new Utxo({
+        chainId: BigNumber.from(getChainIdType(31337))
+      }));
+    }
+
+    merkleProofsForInputs = inputs.map((x) => this.getMerkleProof(x));
+
+    if (merkleProofsForInputs.length !== inputs.length) {
+      throw new Error('Merkle proofs has different length than inputs');
+    }
+
+    if (outputs.length < 2) {
+      while (outputs.length < 2) {
+        outputs.push(new Utxo({
+          chainId: BigNumber.from(getChainIdType(31337))
+        }));
+      }
+    }
+
+    let extAmount = BigNumber.from(fee)
+      .add(outputs.reduce((sum, x) => sum.add(x.amount), BigNumber.from(0)))
+      .sub(inputs.reduce((sum, x) => sum.add(x.amount), BigNumber.from(0)))
+
+    const { extData, publicInputs, roots, chainId } = await this.setupTransaction(
+      inputs,
+      outputs,
+      extAmount,
+      fee,
+      recipient,
+      relayer,
+      merkleProofsForInputs,
+    );
+
+    const args = [
+      { owner, publicKey },
+      { ...publicInputs, outputCommitments: [publicInputs.outputCommitments[0], publicInputs.outputCommitments[1]] },
+      extData,
+    ];
+    const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
+    // console.log(args);
+    // console.log("CHAINID::::::::::::::: ", chainId.toString())
+    let inputData = toByteArray(publicInputs.publicAmount, 32)
+    // console.log("publicAmount:::::::::: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(publicInputs.extDataHash, 32)
+    // console.log("extDataHash::::::::::: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(publicInputs.inputNullifiers[0], 32)
+    // console.log("inputNullifiers[0]:::: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(publicInputs.inputNullifiers[1], 32)
+    // console.log("inputNullifiers[1]:::: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(publicInputs.outputCommitments[0], 32)
+    // console.log("outputCommitments[0]:: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(publicInputs.outputCommitments[1], 32)
+    // console.log("outputCommitments[1]:: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toFixedHex(chainId.toString(), 32).slice(2).padStart(2, '0')
+    // console.log("chainId::::::::::::::: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(roots[0].merkleRoot, 32)
+    // console.log("roots[0]:::::::::::::: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    inputData += toByteArray(roots[1].merkleRoot, 32)
+
+
+    inputData = "0x" + inputData.toString()
+    // console.log("inputData:: ", inputData)
+    // console.log("len(inputData):::::::::: ", inputData.length)
+    // console.log("len(inputData):: ", inputData.length)
+
+    sha.update(toBuffer(inputData, 288))
+    const hash = "0x" + sha.getHash("HEX")
+    const result = ethers.BigNumber.from(hash)
+        .mod(ethers.BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617'))
+        .toString()
+
+    // console.log("HASH:::::: ", result)
+    // console.log("fixedHASH: ", toFixedHex(result, 32))
+
+    let tx = await this.contract.test_call(
+      { owner, publicKey },
+      { ...publicInputs, outputCommitments: [publicInputs.outputCommitments[0], publicInputs.outputCommitments[1]] },
+      extData,
+      { gasLimit: '0x5B8D80' }
+    );
+    // console.log("value: ", tx)
+    // console.log("len(value):: ", tx[0].length)
+    let output_data = tx[0]
+    let output_hash = tx[1]
+    // console.log("OUTPUT_DATA:: ", output_data)
+    // console.log("OUTPUT_HASH:: ", output_hash)
+    // console.log("len(inputData):: ", inputData.length)
+
+    if (inputData == output_data) {
+        console.log("IS EQUAL!!!!!!")
+        console.log("OUTPUT_HASH:: ", BigNumber.from(output_hash).toString())
+        console.log("INPUT_HASH::: ", BigNumber.from(result).toString())
+        if(BigNumber.from(result).toString() == BigNumber.from(result).toString()) {
+            console.log("IVE DONE IT")
+        }
+    } else {
+        console.log("shit...")
+    }
+
+    // const receipt = await tx.wait();
+    // console.log(receipt)
+    //console.log(`updated root (registertransact, contract) is ${toFixedHex(await this.contract.getLastRoot())}`);
+    return tx;
   }
 
   public async registerAndTransact(

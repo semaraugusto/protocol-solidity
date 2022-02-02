@@ -107,7 +107,8 @@ abstract contract VAnchorBase is AnchorBase {
 
   function verify2(
     bytes memory _proof,
-    bytes memory _input
+    bytes memory _input,
+    uint256 hashedInput
   ) internal view returns (bool r) {
     uint256[8] memory p = abi.decode(_proof, (uint256[8]));
     (
