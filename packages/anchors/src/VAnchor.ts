@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { VAnchor as VAnchorContract, VAnchor__factory, VAnchorEncodeInputs__factory } from '@webb-tools/contracts';
-import { p256, toHex, RootInfo, Keypair, FIELD_SIZE, getExtDataHash, toFixedHex, Utxo, getChainIdType } from '@webb-tools/utils';
+import { p256, toBuffer, toFixedSizeString, Buffer2Hex, toHex, RootInfo, Keypair, FIELD_SIZE, getExtDataHash, toFixedHex, Utxo, getChainIdType } from '@webb-tools/utils';
 import { IAnchorDeposit, IAnchor, IExtData, IMerkleProofData, IUTXOInput, IVariableAnchorPublicInputs, IWitnessInput } from '@webb-tools/interfaces';
 import { MerkleTree } from '@webb-tools/merkle-tree';
 
@@ -16,31 +16,34 @@ function checkNativeAddress(tokenAddress: string): boolean {
   return false;
 }
 
-const toBuffer = (value, length) =>
-  Buffer.from(
-    ethers.BigNumber.from(value)
-      .toHexString()
-      .slice(2)
-      .padStart(length * 2, '0'),
-    'hex',
-  )
-
-const toByteArray = (value, length) =>
+const padStart = (value, length) =>
     value.slice(2)
         .padStart(length * 2, '0')
 
-const Buffer2Hex = (number, length = 32) =>
-  '0x' +
-  (number instanceof Buffer
-    ? number.toString('hex')
-    : ethers.BigNumber.from(number).toHexString().slice(2)
-  ).padStart(length * 2, '0')
+export function createInputData(publicInputs, chainId, roots): string {
+    let inputData = padStart(publicInputs.publicAmount, 32)
+    inputData += padStart(publicInputs.extDataHash, 32)
+    inputData += padStart(publicInputs.inputNullifiers[0], 32)
+    inputData += padStart(publicInputs.inputNullifiers[1], 32)
+    inputData += padStart(publicInputs.outputCommitments[0], 32)
+    inputData += padStart(publicInputs.outputCommitments[1], 32)
+    inputData += padStart(toFixedHex(chainId.toString(), 32), 32)
+    inputData += padStart(roots[0].merkleRoot, 32)
+    inputData += padStart(roots[1].merkleRoot, 32)
+    inputData = "0x" + inputData.toString()
+    return(inputData)
+}
 
-// const toFixedHex = (number, length = 32) =>
-//   '0x' + number.slice(2).padStart(length*2, '0');
+export function getHash(inputData: string): string {
+    const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
+    sha.update(toBuffer(inputData, 288))
+    const hash = "0x" + sha.getHash("HEX")
+    const result = ethers.BigNumber.from(hash)
+        .mod(ethers.BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617'))
+        .toString()
 
-const toFixedSizeString = (number, length = 32) =>
-  '0x' + number.padStart(length*2, '0');
+    return result
+}
 
 // This convenience wrapper class is used in tests -
 // It represents a deployed contract throughout its life (e.g. maintains merkle tree state)
@@ -883,49 +886,8 @@ export class VAnchor implements IAnchor {
       { ...publicInputs, outputCommitments: [publicInputs.outputCommitments[0], publicInputs.outputCommitments[1]] },
       extData,
     ];
-    const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
-    // console.log(args);
-    // console.log("CHAINID::::::::::::::: ", chainId.toString())
-    let inputData = toByteArray(publicInputs.publicAmount, 32)
-    // console.log("publicAmount:::::::::: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(publicInputs.extDataHash, 32)
-    // console.log("extDataHash::::::::::: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(publicInputs.inputNullifiers[0], 32)
-    // console.log("inputNullifiers[0]:::: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(publicInputs.inputNullifiers[1], 32)
-    // console.log("inputNullifiers[1]:::: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(publicInputs.outputCommitments[0], 32)
-    // console.log("outputCommitments[0]:: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(publicInputs.outputCommitments[1], 32)
-    // console.log("outputCommitments[1]:: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toFixedHex(chainId.toString(), 32).slice(2).padStart(2, '0')
-    // console.log("chainId::::::::::::::: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(roots[0].merkleRoot, 32)
-    // console.log("roots[0]:::::::::::::: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    inputData += toByteArray(roots[1].merkleRoot, 32)
-
-
-    inputData = "0x" + inputData.toString()
-    // console.log("inputData:: ", inputData)
-    // console.log("len(inputData):::::::::: ", inputData.length)
-    // console.log("len(inputData):: ", inputData.length)
-
-    sha.update(toBuffer(inputData, 288))
-    const hash = "0x" + sha.getHash("HEX")
-    const result = ethers.BigNumber.from(hash)
-        .mod(ethers.BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617'))
-        .toString()
-
-    // console.log("HASH:::::: ", result)
-    // console.log("fixedHASH: ", toFixedHex(result, 32))
+    let inputData = createInputData(publicInputs, chainId, roots)
+    let result = getHash(inputData)
 
     let tx = await this.contract.test_call(
       { owner, publicKey },
@@ -933,19 +895,14 @@ export class VAnchor implements IAnchor {
       extData,
       { gasLimit: '0x5B8D80' }
     );
-    // console.log("value: ", tx)
-    // console.log("len(value):: ", tx[0].length)
     let output_data = tx[0]
     let output_hash = tx[1]
-    // console.log("OUTPUT_DATA:: ", output_data)
-    // console.log("OUTPUT_HASH:: ", output_hash)
-    // console.log("len(inputData):: ", inputData.length)
 
     if (inputData == output_data) {
         console.log("IS EQUAL!!!!!!")
         console.log("OUTPUT_HASH:: ", BigNumber.from(output_hash).toString())
         console.log("INPUT_HASH::: ", BigNumber.from(result).toString())
-        if(BigNumber.from(result).toString() == BigNumber.from(result).toString()) {
+        if(BigNumber.from(output_hash).toString() == BigNumber.from(result).toString()) {
             console.log("IVE DONE IT")
         }
     } else {
