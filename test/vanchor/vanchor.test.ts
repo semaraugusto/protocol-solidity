@@ -96,6 +96,7 @@ describe('VAnchor for 2 max edges', () => {
       const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/poseidon4/4/witness_calculator.js");
       const fileBuf = require('fs').readFileSync('protocol-solidity-fixtures/fixtures/poseidon4/4/poseidon4_test.wasm');
       const wtnsCalc = await witnessCalculator(fileBuf)
+      // console.log("INPUT POSEIDON4: ", data)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);
       return wtns;
     }
@@ -104,6 +105,7 @@ describe('VAnchor for 2 max edges', () => {
       const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/vanchor_2/2/witness_calculator.js");
       const fileBuf = require('fs').readFileSync('protocol-solidity-fixtures/fixtures/vanchor_2/2/poseidon_vanchor_2_2.wasm');
       const wtnsCalc = await witnessCalculator(fileBuf)
+      // console.log("INPUT create2InputWitness: ", data)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);
       return wtns;
     }
@@ -112,6 +114,7 @@ describe('VAnchor for 2 max edges', () => {
       const witnessCalculator = require("../../protocol-solidity-fixtures/fixtures/vanchor_16/2/witness_calculator.js");
       const fileBuf = require('fs').readFileSync("protocol-solidity-fixtures/fixtures/vanchor_16/2/poseidon_vanchor_16_2.wasm");
       const wtnsCalc = await witnessCalculator(fileBuf)
+      // console.log("INPUT create16InputWitness: ", data)
       const wtns = await wtnsCalc.calculateWTNSBin(data,0);
       return wtns;
     }

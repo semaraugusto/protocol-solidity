@@ -3,6 +3,7 @@ import { VAnchor as VAnchorContract, VAnchor__factory, VAnchorEncodeInputs__fact
 import { p256, toHex, RootInfo, Keypair, FIELD_SIZE, getExtDataHash, toFixedHex, Utxo, getChainIdType } from '@webb-tools/utils';
 import { IAnchorDeposit, IAnchor, IExtData, IMerkleProofData, IUTXOInput, IVariableAnchorPublicInputs, IWitnessInput } from '@webb-tools/interfaces';
 import { MerkleTree } from '@webb-tools/merkle-tree';
+import jsSHA from "jssha";
 
 const snarkjs = require('snarkjs');
 
@@ -12,6 +13,56 @@ function checkNativeAddress(tokenAddress: string): boolean {
     return true;
   }
   return false;
+}
+
+const toBuffer = (value, length) =>
+  Buffer.from(
+    ethers.BigNumber.from(value)
+      .toHexString()
+      .slice(2)
+      .padStart(length * 2, '0'),
+    'hex',
+  )
+
+const padStart = (value, length=32) =>
+    value.slice(2).padStart(length*2, "0")
+
+function getArgsHash(
+    publicAmount: string,
+    extDataHash:string,
+    inputNullifier: any,
+    outputCommitment: any,
+    chainID: string,
+    roots: any
+): string {
+    let inputData = padStart(toFixedHex(publicAmount))
+    inputData += padStart(toFixedHex(extDataHash))
+    for(var i=0; i < inputNullifier.length; i++) {
+        inputData += padStart(toFixedHex(inputNullifier[i]))
+    }
+    for(var i=0; i < outputCommitment.length; i++) {
+        inputData += padStart(toFixedHex(outputCommitment[i]))
+    }
+    inputData += padStart(toFixedHex(chainID))
+    for(var i=0; i < roots.length; i++) {
+        inputData += padStart(toFixedHex(roots[i]))
+    }
+
+    inputData = "0x" + inputData.toString()
+    // console.log("inputData:: ", inputData)
+      
+    const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
+
+    sha.update(toBuffer(inputData, 32*(3+inputNullifier.length+outputCommitment.length+roots.length)))
+    const hash = "0x" + sha.getHash("HEX")
+    const result = ethers.BigNumber.from(hash)
+        .mod(ethers.BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617'))
+        .toString()
+    // console.log("RESULT: ", result)
+
+    // return toFixedHex(result)
+    return result
+
 }
 
 // This convenience wrapper class is used in tests -
@@ -387,6 +438,16 @@ export class VAnchor implements IAnchor {
     }
   
     const extDataHash = getExtDataHash(extData)
+
+    const argsHash = getArgsHash(
+      BigNumber.from(extAmount).sub(fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString(),
+      extDataHash.toString(),
+      inputs.map((x) => x.getNullifier().toString()),
+      outputs.map((x) => x.getCommitment().toString()),
+      chainId.toString(),
+      roots.map((x) => BigNumber.from(x.merkleRoot).toString()),
+    )
+
     //console.log(roots);
     let input = {
       roots: roots.map((x) => BigNumber.from(x.merkleRoot).toString()),
@@ -396,6 +457,7 @@ export class VAnchor implements IAnchor {
       outputCommitment: outputs.map((x) => x.getCommitment().toString()),
       publicAmount: BigNumber.from(extAmount).sub(fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString(),
       extDataHash: extDataHash.toString(),
+      argsHash: argsHash,
   
       // data for 2 transaction inputs
       inAmount: inputs.map((x) => x.amount.toString()),
@@ -478,6 +540,8 @@ export class VAnchor implements IAnchor {
     const witnessCalculator = small
       ? await this.smallWitnessCalculator(fileBuf)
       : await this.largeWitnessCalculator(fileBuf)
+
+    // console.log("Witness INPUT: ", data)
     const buff = await witnessCalculator.calculateWTNSBin(data,0);
     return buff;
   }

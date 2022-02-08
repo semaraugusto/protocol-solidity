@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 library VAnchorEncodeInputs {
   bytes2 public constant EVM_CHAIN_ID_TYPE = 0x0100;
+  uint256 public constant SNARK_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
   struct Proof {
     bytes proof;
@@ -37,12 +38,15 @@ library VAnchorEncodeInputs {
   function _encodeInputs2(
     Proof memory _args,
     uint8 maxEdges
-  ) public view returns (bytes memory, bytes32[] memory) {
+  ) public view returns (bytes memory, bytes32[] memory, bytes memory) {
     uint256 _chainId = getChainIdType();
     bytes32[] memory result = new bytes32[](maxEdges + 1);
     bytes memory encodedInput;
+    uint256 argsHash;
+    bytes memory hashValue = new bytes(32);
 
     if (maxEdges == 1) {
+      bytes memory data = new bytes(32*9);
       uint256[9] memory inputs;
       bytes32[2] memory roots = abi.decode(_args.roots, (bytes32[2]));
       // assign roots
@@ -58,7 +62,44 @@ library VAnchorEncodeInputs {
       inputs[6] = uint256(_chainId);
       inputs[7] = uint256(roots[0]);
       inputs[8] = uint256(roots[1]);
+      {
+          uint256 i0 = inputs[0];
+          uint256 i1 = inputs[1];
+          uint256 i2 = inputs[2];
+          assembly {
+              mstore(add(data, 0x60), i2)
+              mstore(add(data, 0x40), i1)
+              mstore(add(data, 0x20), i0)
+          }
+      }
+      {
+          uint256 i3 = inputs[3];
+          uint256 i4 = inputs[4];
+          assembly {
+              mstore(add(data, 0xa0), i4)
+              mstore(add(data, 0x80), i3)
+          }
+      }
+      {
+          uint256 i5 = inputs[5];
+          uint256 i6 = inputs[6];
+          assembly {
+              mstore(add(data, 0xe0), i6)
+              mstore(add(data, 0xc0), i5)
+          }
+      }
+      { 
+          uint256 i7 = inputs[7];
+          uint256 i8 = inputs[8];
+          assembly {
+              mstore(add(data, 0x120), i8)
+              mstore(add(data, 0x100), i7)
+          }
+      }
       encodedInput = abi.encodePacked(inputs);
+      argsHash = uint256(sha256(data)) % SNARK_FIELD;
+      assembly { mstore(add(hashValue, 32), argsHash) }
+
     } else if (maxEdges == 2) {
       uint256[10] memory inputs;
       bytes32[3] memory roots = abi.decode(_args.roots, (bytes32[3]));
@@ -151,7 +192,7 @@ library VAnchorEncodeInputs {
       require(false, "Invalid edges");
     }
 
-    return (encodedInput, result);
+    return (encodedInput, result, hashValue);
   }
 
 
@@ -159,12 +200,15 @@ library VAnchorEncodeInputs {
   function _encodeInputs16(
     Proof memory _args,
     uint8 maxEdges
-  ) public view returns (bytes memory, bytes32[] memory) {
+  ) public view returns (bytes memory, bytes32[] memory, bytes memory) {
     uint256 _chainId = getChainIdType();
     bytes32[] memory result = new bytes32[](maxEdges + 1);
     bytes memory encodedInput;
+    uint256 argsHash;
+    bytes memory hashValue = new bytes(32);
 
     if (maxEdges == 1) {
+      bytes memory data = new bytes(32*23);
       uint256[23] memory inputs;
       bytes32[2] memory roots = abi.decode(_args.roots, (bytes32[2]));
       // assign roots
@@ -195,6 +239,87 @@ library VAnchorEncodeInputs {
       inputs[20] = uint256(_chainId);
       inputs[21] = uint256(roots[0]);
       inputs[22] = uint256(roots[1]);
+      {
+          uint256 i0 = inputs[0];
+          uint256 i1 = inputs[1];
+          uint256 i2 = inputs[2];
+          assembly {
+              mstore(add(data, 0x60), i2)
+              mstore(add(data, 0x40), i1)
+              mstore(add(data, 0x20), i0)
+          }
+      }
+      {
+          uint256 i3 = inputs[3];
+          uint256 i4 = inputs[4];
+          uint256 i5 = inputs[5];
+          assembly {
+              mstore(add(data, 0xc0), i5)
+              mstore(add(data, 0xa0), i4)
+              mstore(add(data, 0x80), i3)
+          }
+      }
+      {
+          uint256 i6 = inputs[6];
+          uint256 i7 = inputs[7];
+          uint256 i8 = inputs[8];
+          assembly {
+              mstore(add(data, 0x120), i8)
+              mstore(add(data, 0x100), i7)
+              mstore(add(data, 0xe0), i6)
+          }
+      }
+      {
+          uint256 i9 = inputs[9];
+          uint256 i10 = inputs[10];
+          uint256 i11 = inputs[11];
+          assembly {
+              mstore(add(data, 0x180), i11)
+              mstore(add(data, 0x160), i10)
+              mstore(add(data, 0x140), i9)
+          }
+      }
+      {
+          uint256 i12 = inputs[12];
+          uint256 i13 = inputs[13];
+          uint256 i14 = inputs[14];
+          assembly {
+              mstore(add(data, 0x1e0), i14)
+              mstore(add(data, 0x1c0), i13)
+              mstore(add(data, 0x1a0), i12)
+          }
+      }
+      {
+          uint256 i15 = inputs[15];
+          uint256 i16 = inputs[16];
+          uint256 i17 = inputs[17];
+          assembly {
+              mstore(add(data, 0x240), i17)
+              mstore(add(data, 0x220), i16)
+              mstore(add(data, 0x200), i15)
+          }
+      }
+      {
+          uint256 i18 = inputs[18];
+          uint256 i19 = inputs[19];
+          uint256 i20 = inputs[20];
+          assembly {
+              mstore(add(data, 0x2a0), i20)
+              mstore(add(data, 0x280), i19)
+              mstore(add(data, 0x260), i18)
+          }
+      }
+      {
+          uint256 i21 = inputs[21];
+          uint256 i22 = inputs[22];
+          assembly {
+              mstore(add(data, 0x2e0), i22)
+              mstore(add(data, 0x2c0), i21)
+          }
+      }
+      encodedInput = abi.encodePacked(inputs);
+      argsHash = uint256(sha256(data)) % SNARK_FIELD;
+      assembly { mstore(add(hashValue, 32), argsHash) }
       encodedInput = abi.encodePacked(inputs);
     } else if (maxEdges == 2) {
       uint256[24] memory inputs;
@@ -344,6 +469,6 @@ library VAnchorEncodeInputs {
       require(false, "Invalid edges");
     }
 
-      return (encodedInput, result);
+      return (encodedInput, result, hashValue);
   }
 }

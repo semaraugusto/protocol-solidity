@@ -10,7 +10,7 @@ interface IVAnchorVerifier2_2 {
     uint[2] memory a,
     uint[2][2] memory b,
     uint[2] memory c,
-    uint256[9] memory input
+    uint256[1] memory input
   ) external view returns (bool r);
 }
 
@@ -19,7 +19,7 @@ interface IVAnchorVerifier2_16 {
     uint[2] memory a,
     uint[2][2] memory b,
     uint[2] memory c,
-    uint256[23] memory input
+    uint256[1] memory input
   ) external view returns (bool r);
 }
 

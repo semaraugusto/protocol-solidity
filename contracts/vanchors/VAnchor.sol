@@ -174,13 +174,13 @@ contract VAnchor is VAnchorBase {
 
   function _executeVerification(VAnchorEncodeInputs.Proof memory _args) view internal {
     if (_args.inputNullifiers.length == 2) {
-      (bytes memory encodedInput, bytes32[] memory roots) = VAnchorEncodeInputs._encodeInputs2(_args, maxEdges);
+      (bytes memory encodedInput, bytes32[] memory roots, bytes memory argsHash) = VAnchorEncodeInputs._encodeInputs2(_args, maxEdges);
       require(isValidRoots(roots), "Invalid roots");
-      require(verify2(_args.proof, encodedInput), "Invalid transaction proof");
+      require(verify2(_args.proof, argsHash), "Invalid transaction proof");
     } else if (_args.inputNullifiers.length == 16) {
-      (bytes memory encodedInput, bytes32[] memory roots) = VAnchorEncodeInputs._encodeInputs16(_args, maxEdges);
+      (bytes memory encodedInput, bytes32[] memory roots, bytes memory argsHash) = VAnchorEncodeInputs._encodeInputs16(_args, maxEdges);
       require(isValidRoots(roots), "Invalid roots");
-      require(verify16(_args.proof, encodedInput), "Invalid transaction proof");
+      require(verify16(_args.proof, argsHash), "Invalid transaction proof");
     } else {
       revert("unsupported input count");
     }
