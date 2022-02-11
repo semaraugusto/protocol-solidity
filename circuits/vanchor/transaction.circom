@@ -4,7 +4,7 @@ include "../../node_modules/circomlib/circuits/poseidon.circom";
 include "../set/membership.circom";
 include "./manyMerkleProof.circom";
 include "./keypair.circom";
-include "../TreeUpdateArgsHasher.circom";
+include "../shaHasher/shaHasher.circom";
 
 /*
 UTXO structure:
@@ -47,20 +47,26 @@ template TransactionWithHasher(levels, nIns, nOuts, zeroLeaf, length) {
     signal input roots[length];
     signal input diffs[nIns][length];
 
-    component argsHasher = TreeUpdateArgsHasher(nIns, nOuts, length);
-
-    argsHasher.publicAmount <== publicAmount;
-    argsHasher.extDataHash <== extDataHash;
+    component argsHasher = ShaHasher(3+nIns+nOuts+length);
+    var idx = 0;
+    argsHasher.in[idx] <== publicAmount;
+    idx = idx + 1;
+    argsHasher.in[idx] <== extDataHash;
+    idx = idx + 1;
     for(var i = 0; i < nIns; i++) {
-        argsHasher.inputNullifiers[i] <== inputNullifier[i];
+        argsHasher.in[idx] <== inputNullifier[i];
+        idx = idx + 1;
     }
     for(var i = 0; i < nOuts; i++) {
-        argsHasher.outputCommitments[i] <== outputCommitment[i];
+        argsHasher.in[idx] <== outputCommitment[i];
+        idx = idx + 1;
     }
-    argsHasher.chainID <== chainID;
+    argsHasher.in[idx] <== chainID;
+    idx = idx + 1;
 
     for(var i = 0; i < length; i++) {
-        argsHasher.roots[i] <== roots[i];
+        argsHasher.in[idx] <== roots[i];
+        idx = idx + 1;
     }
 
     argsHash === argsHasher.out;
